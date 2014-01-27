@@ -12,9 +12,9 @@ DChart.Points = DChart.getCore().__extends({
     GraphType: 'Points',
     SetDefaultOptions: function () {
         this._resetSharedOpions();
-                this.innerOptions = DChart.Methods.Extend(this.originalDefaultOptions, {
-                        labelAxis: {
-                                valueType: null,
+        this.innerOptions = DChart.Methods.Extend(this.originalDefaultOptions, {
+            labelAxis: {
+                valueType: null,
                 content: function (val) {
                     if (this.valueType == 'd') { return val.format('yyyy-MM-dd'); }
                     else if (this.valueType == 't') { return val.format('MM-dd hh:mm'); }
@@ -25,17 +25,17 @@ DChart.Points = DChart.getCore().__extends({
                 interval: null,
                 sort: true
             },
-                        node: {
+            node: {
                 colors: null,
-                                nodetype: null,
-                                linecolor: null,
-                                linewidth: null,
-                                length: null,
-                                fillcolor: null
+                nodetype: null,
+                linecolor: null,
+                linewidth: null,
+                length: null,
+                fillcolor: null
             },
-                        tip: {
-                                merge: false,
-                                content: function (data, merge) {
+            tip: {
+                merge: false,
+                content: function (data, merge) {
                     if (merge) {
                         var res = '<div>';
                         for (var i = 0; i < data.length; i++) {
@@ -53,13 +53,13 @@ DChart.Points = DChart.getCore().__extends({
                     }
                 }
             },
-                        alignline: {
-                                verticalline: true,
-                                horizontalline: true,
-                                linecolor: null
+            alignline: {
+                verticalline: true,
+                horizontalline: true,
+                linecolor: null
             },
-                        scale: {
-                                drawvertical: true
+            scale: {
+                drawvertical: true
             }
         });
         return this;
@@ -75,13 +75,13 @@ DChart.Points = DChart.getCore().__extends({
         inner.SetOptions(ops);
         inner._checkOptions();
         var options = inner.innerOptions;
-                if (options.labelAxis.valueType == 'p') {
+        if (options.labelAxis.valueType == 'p') {
             throw new Error(DChart.Const.Language[inner.Language].WrongParam + DChart.Const.Language[inner.Language].LabelAxisValueTypeCannotBePercent);
         }
         inner.SetData(_data);
         inner._onStart();
-                inner.tempData.recreateAssists = true;
-                inner.shapes.nodes = [];
+        inner.tempData.recreateAssists = true;
+        inner.shapes.nodes = [];
         inner.coordinates.nodes = [];
         var axisData = inner._formatAxisData();
         var valids = inner._calculateOutersValid();
@@ -90,11 +90,11 @@ DChart.Points = DChart.getCore().__extends({
         inner.coordinates.draw = coordinate;
         var ctx = inner.ctx;
         var lValueType = options.labelAxis.valueType;
-                var percentType = axisData.vValueType == 'p';
-                var nodelength = options.node.length || DChart.Methods.CapValue((axisSize.maxX - axisSize.minX) / 100, 10, 6);
+        var percentType = axisData.vValueType == 'p';
+        var nodelength = options.node.length || DChart.Methods.CapValue((axisSize.maxX - axisSize.minX) / 100, 10, 6);
         var nodecolors = (options.node.colors && options.node.colors.length > 0 ? options.node.colors : null) || DChart.Const.Defaults.FillColors;
         inner.tempData.legendColors = nodecolors;
-                var nodeShape = function (index, centerX, centerY, length, data, color) {
+        var nodeShape = function (index, centerX, centerY, length, data, color) {
             this.index = index;
             this.centerX = centerX;
             this.centerY = centerY;
@@ -102,15 +102,15 @@ DChart.Points = DChart.getCore().__extends({
             this.isHovered = false;
             this.nodelength = length;
             this.data = data;
-                        this.click = function (e) {
+            this.click = function (e) {
                 var click = typeof this.data.click == 'function' ? this.data.click : (options.click || null);
                 if (click) {
                     click(this.data, e);
                 }
             };
             if (options.tip.show && typeof options.tip.content == 'function') {
-                                this.tip = null;
-                                this.showTip = function () {
+                this.tip = null;
+                this.showTip = function () {
                     if (this.tip) {
                         this.tip.style.display = 'inline';
                     }
@@ -118,23 +118,23 @@ DChart.Points = DChart.getCore().__extends({
                         var centerX = this.centerX + nodelength + 5;
                         var centerY = this.centerY - nodelength - 10;
                         this.tip = inner._createTip(options.tip.content.call(options, this.data, false), centerX, centerY);
-                                                if (this.centerX + this.tip.clientWidth > axisSize.maxX) {
+                        if (this.centerX + this.tip.clientWidth > axisSize.maxX) {
                             inner._changeTip(this.tip, centerX - 5 - nodelength - this.tip.clientWidth);
                         }
                         var shape = this;
                         shape.tip.onclick = function (e) { shape.click(e); };
                     }
                 };
-                                this.hideTip = function () {
+                this.hideTip = function () {
                     if (this.tip) { this.tip.style.display = 'none'; }
                 };
             }
         };
-                var drawnode = function (x, y, color, nodeinfo) {
+        var drawnode = function (x, y, color, nodeinfo) {
             var ops = options.node;
             var _nodelength = nodeinfo.nodelength || nodelength;
             var nodetype = nodeinfo.nodetype || ops.nodetype || 'c';
-                        var nodelinecolor = nodeinfo.nodelinecolor || ops.linecolor || color;
+            var nodelinecolor = nodeinfo.nodelinecolor || ops.linecolor || color;
             var nodelinewidth = nodeinfo.nodelinewidth || ops.linewidth;
             inner.DrawFigures.createPointElement(nodetype, x, y, _nodelength, color, true, nodelinecolor, nodelinewidth, true, true);
         };
@@ -148,10 +148,10 @@ DChart.Points = DChart.getCore().__extends({
                     return (axisSize.maxX - axisSize.minX) * inner._getFormatDiff(axisData.lValueType, axisData.lMinValue, val) / inner._getFormatDiff(axisData.lValueType, axisData.lMinValue, axisData.lMaxValue);
                 }
                 else {
-                                        if (axisData.multiple) {
+                    if (axisData.multiple) {
                         return (axisSize.maxX - axisSize.minX) * val / (inner.innerData[0].value.length - 1);
                     }
-                                            else {
+                    else {
                         return (axisSize.maxX - axisSize.minX) * val / (inner.innerData.length - 1);
                     }
                 }
@@ -220,7 +220,7 @@ DChart.Points = DChart.getCore().__extends({
             };
             var fixRowShapes = function (x, y) {
                 var shapes = [];
-                                var locX = 0;
+                var locX = 0;
                 if (y <= axisSize.maxY && y >= axisSize.minY && x >= axisSize.minX && x <= axisSize.maxX) {
                     var index = 0;
                     var cut = (axisSize.maxX - axisSize.minX) / (axisData.tuftCount - 1);
@@ -252,9 +252,9 @@ DChart.Points = DChart.getCore().__extends({
             inner.canvas.onmousemove = function (e) {
                 var e = window.event || e;
                 var location = inner._getMouseLoction(e);
-                                var showByNode = axisData.lValueType || !axisData.multiple;
+                var showByNode = axisData.lValueType || !axisData.multiple;
                 var veryShape = fixSingleShape(location.X, location.Y);
-                                if (inner.tempData.currentMouseShape != veryShape) {
+                if (inner.tempData.currentMouseShape != veryShape) {
                     var shape = inner.tempData.currentMouseShape;
                     if (shape) {
                         var mouseleave = typeof shape.data.mouseleave == 'function' ? shape.data.mouseleave : (options.mouseleave || null);
@@ -262,15 +262,15 @@ DChart.Points = DChart.getCore().__extends({
                             mouseleave(shape.data, e);
                         }
                     }
-                                        inner.tempData.currentMouseShape = veryShape;
+                    inner.tempData.currentMouseShape = veryShape;
                     for (var i = 0, shape; shape = inner.shapes.nodes[i]; i++) {
-                                                if (shape != veryShape && shape.isHovered) {
+                        if (shape != veryShape && shape.isHovered) {
                             shape.isHovered = false;
                             if (showByNode && shape.hideTip) { shape.hideTip(); }
                         }
                     }
                     if (veryShape) {
-                                                veryShape.isHovered = true;
+                        veryShape.isHovered = true;
                         if (options.mouseoverChangeCursor) { inner.canvas.style.cursor = 'pointer'; }
                         if (showByNode) {
                             if (options.alignline.verticalline || options.alignline.horizontalline) {
@@ -290,7 +290,7 @@ DChart.Points = DChart.getCore().__extends({
                         }
                         var mouseover = typeof veryShape.data.mouseover == 'function' ? veryShape.data.mouseover : (options.mouseover || null);
                         if (mouseover) {
-                                                        mouseover(veryShape.data, e);
+                            mouseover(veryShape.data, e);
                         }
                     }
                     else {
@@ -302,11 +302,11 @@ DChart.Points = DChart.getCore().__extends({
                         }
                     }
                 }
-                                if (!showByNode) {
+                if (!showByNode) {
                     var fixed = fixRowShapes(location.X, location.Y);
                     if (inner.locX != fixed.locX) {
                         inner.locX = fixed.locX;
-                                                if (options.tip.merge) {
+                        if (options.tip.merge) {
                             for (var i = 0; i < mergeTips.length; i++) {
                                 if (mergeTips[i]) {
                                     mergeTips[i].style.display = 'none';
@@ -328,8 +328,8 @@ DChart.Points = DChart.getCore().__extends({
                                 var alignlinecolor = options.alignline.linecolor || DChart.Const.Defaults.AlignLineColor;
                                 inner.DrawFigures.createLine(fixed.locX, axisSize.minY, fixed.locX, axisSize.maxY + 1, 1, alignlinecolor);
                             }
-                                                        if (options.tip.merge) {
-                                                                if (fixed.shapes[0].showTip) {
+                            if (options.tip.merge) {
+                                if (fixed.shapes[0].showTip) {
                                     var mergeTip = mergeTips[fixed.shapes[0].index];
                                     if (!mergeTip) {
                                         var data = [];

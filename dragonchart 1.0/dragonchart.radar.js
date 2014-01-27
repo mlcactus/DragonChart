@@ -12,14 +12,14 @@ else {
     };
 }
 DChart.Radar = DChart.getCore().__extends({
-        GraphType: 'Radar',
-        SetDefaultOptions: function () {
+    GraphType: 'Radar',
+    SetDefaultOptions: function () {
         this._resetSharedOpions();
         this.innerOptions = DChart.Methods.Extend(this.originalDefaultOptions, {
             radius: null,
             margin: null,
             startDirection: null,
-                        scale: {
+            scale: {
                 linewidth: 0.5,
                 minvalue: null,
                 maxvalue: null,
@@ -46,13 +46,13 @@ DChart.Radar = DChart.getCore().__extends({
                 nodelinewidth: 1,
                 nodelength: null
             },
-                        labels: {
+            labels: {
                 labels: null,
-                                fontcolors: null,
+                fontcolors: null,
                 fontweight: null,
                 fontsize: null,
                 fontfamily: null,
-                                showtips: true
+                showtips: true
             },
             tip: {
                 content: function (data) {
@@ -63,10 +63,10 @@ DChart.Radar = DChart.getCore().__extends({
         });
         return this;
     },
-        Draw: function (_data, ops) {
+    Draw: function (_data, ops) {
         var inner = this;
-                if (arguments.length === 1) {
-                        if (!DChart.Methods.IsArray(arguments[0])) {
+        if (arguments.length === 1) {
+            if (!DChart.Methods.IsArray(arguments[0])) {
                 ops = arguments[0];
                 _data = undefined;
             }
@@ -76,12 +76,12 @@ DChart.Radar = DChart.getCore().__extends({
         var options = inner.innerOptions;
         inner.SetData(_data);
         inner._onStart();
-                var minval = null;
+        var minval = null;
         var maxval = null;
-                var multiple = inner.innerData[0].value.length != undefined;
-                if (!multiple) { inner.tempData.legendInvalid = true; }
+        var multiple = inner.innerData[0].value.length != undefined;
+        if (!multiple) { inner.tempData.legendInvalid = true; }
         var checkNumber = function (tmpVal) {
-                        if (typeof tmpVal != 'number') {
+            if (typeof tmpVal != 'number') {
                 throw new Error(DChart.Const.Language[inner.Language].WrongData + '\'' + tmpVal + '\'' + DChart.Const.Language[inner.Language].NeedNumberData);
             }
             else if (tmpVal < 0) {
@@ -125,30 +125,30 @@ DChart.Radar = DChart.getCore().__extends({
         var dataLength = multiple ? inner.innerData[0].value.length : inner.innerData.length;
         var averageAngle = Math.PI * 2 / dataLength;
 
-                var ctx = inner.ctx;
-                var getPartPercent = function (val) {
+        var ctx = inner.ctx;
+        var getPartPercent = function (val) {
             return (val - scaleData.minvalue) / (scaleData.maxvalue - scaleData.minvalue);
         };
-                inner.shapes.nodes = [];
+        inner.shapes.nodes = [];
         inner.shapes.labels = [];
-                var nodelength = options.radar.nodelength || DChart.Methods.CapValue((coordinate.maxX - coordinate.minX) / 150, 10, 6);
+        var nodelength = options.radar.nodelength || DChart.Methods.CapValue((coordinate.maxX - coordinate.minX) / 150, 10, 6);
 
-                var nodeShape = function (index, centerX, centerY, length, data) {
+        var nodeShape = function (index, centerX, centerY, length, data) {
             this.index = index;
             this.centerX = centerX;
             this.centerY = centerY;
             this.isHovered = false;
             this.nodelength = length;
             this.data = data;
-                        this.click = function (e) {
+            this.click = function (e) {
                 var click = typeof this.data.click == 'function' ? this.data.click : (options.click || null);
                 if (click) {
                     click(this.data, e);
                 }
             };
             if (options.tip.show && typeof options.tip.content == 'function') {
-                                this.tip = null;
-                                this.showTip = function () {
+                this.tip = null;
+                this.showTip = function () {
                     if (this.tip) {
                         this.tip.style.display = 'inline';
                     }
@@ -156,14 +156,14 @@ DChart.Radar = DChart.getCore().__extends({
                         var centerX = this.centerX + nodelength + 5;
                         var centerY = this.centerY - nodelength - 10;
                         this.tip = inner._createTip(options.tip.content.call(options, this.data, false), centerX, centerY);
-                                                if (this.centerX + this.tip.clientWidth > coordinate.maxX) {
+                        if (this.centerX + this.tip.clientWidth > coordinate.maxX) {
                             inner._changeTip(this.tip, centerX - 5 - nodelength - this.tip.clientWidth);
                         }
                         var shape = this;
                         shape.tip.onclick = function (e) { shape.click(e); };
                     }
                 };
-                                this.hideTip = function () {
+                this.hideTip = function () {
                     if (this.tip) { this.tip.style.display = 'none'; }
                 };
             }
@@ -189,7 +189,7 @@ DChart.Radar = DChart.getCore().__extends({
                 var _angle = startAngle + i * averageAngle;
                 var centerX = coordinate.centerX + radius * Math.cos(_angle);
                 var centerY = coordinate.centerY + radius * Math.sin(_angle);
-                                points.push([centerX, centerY, nodefillcolor, nodelinecolor, nodelinewidth, _nodelength, nodetype]);
+                points.push([centerX, centerY, nodefillcolor, nodelinecolor, nodelinewidth, _nodelength, nodetype]);
                 if (percentAnimComplete >= 1) {
                     var _shapedata = { value: value, click: _data.click, mouseover: _data.mouseover, mouseleave: _data.mouseleave };
                     _shapedata.text = multiple ? data.text : '';
@@ -202,7 +202,7 @@ DChart.Radar = DChart.getCore().__extends({
             for (var i = 0, point; point = points[i]; i++) {
                 inner.DrawFigures.createPointElement(point[6], point[0], point[1], point[5], point[2], true, point[3], point[4], true, true);
                 if (percentAnimComplete >= 1) {
-                                        var nodecoor = { centerX: point[0], centerY: point[1], length: point[5] };
+                    var nodecoor = { centerX: point[0], centerY: point[1], length: point[5] };
                     if (multiple) {
                         if (!inner.coordinates.radar.nodes[index]) { inner.coordinates.radar.nodes[index] = []; }
                         inner.coordinates.radar.nodes[index][i] = nodecoor;
@@ -215,7 +215,7 @@ DChart.Radar = DChart.getCore().__extends({
             var opsScale = options.scale;
             var linewidth = opsScale.linewidth;
             if (!(opsScale.linewidth > 0)) { return; }
-                        var opsLabels = options.labels;
+            var opsLabels = options.labels;
             var labels = opsLabels.labels || [];
             if (!multiple) {
                 for (var i = 0, item; item = inner.innerData[i]; i++) {
@@ -239,10 +239,10 @@ DChart.Radar = DChart.getCore().__extends({
                     inner.DrawFigures.createLine(startX, startY, endX, endY, linewidth, linecolor);
                 }
                 inner.DrawFigures.createLine(coordinate.centerX, coordinate.centerY, startX, startY, linewidth, linecolor);
-                                var floatRight = DChart.Methods.JudgeBetweenAngle(-Math.PI * 0.5, Math.PI * 0.5, _startAngle);
+                var floatRight = DChart.Methods.JudgeBetweenAngle(-Math.PI * 0.5, Math.PI * 0.5, _startAngle);
                 var floatTop = DChart.Methods.JudgeBetweenAngle(-Math.PI, 0, _startAngle);
-                                var inMiddle = DChart.Methods.JudgeBetweenAngle(-Math.PI / 2 - little, -Math.PI / 2 + little, _startAngle) || DChart.Methods.JudgeBetweenAngle(Math.PI / 2 - little, Math.PI / 2 + little, _startAngle);
-                                var inCenter = DChart.Methods.JudgeBetweenAngle(Math.PI - little, Math.PI + little, _startAngle) || DChart.Methods.JudgeBetweenAngle(-little, little, _startAngle);
+                var inMiddle = DChart.Methods.JudgeBetweenAngle(-Math.PI / 2 - little, -Math.PI / 2 + little, _startAngle) || DChart.Methods.JudgeBetweenAngle(Math.PI / 2 - little, Math.PI / 2 + little, _startAngle);
+                var inCenter = DChart.Methods.JudgeBetweenAngle(Math.PI - little, Math.PI + little, _startAngle) || DChart.Methods.JudgeBetweenAngle(-little, little, _startAngle);
                 var labelX = startX;
                 var labelY = startY;
                 if (!inMiddle) {
@@ -277,7 +277,7 @@ DChart.Radar = DChart.getCore().__extends({
                 }
             }
 
-                        var opsStaff = options.staff;
+            var opsStaff = options.staff;
             var content = opsStaff.content;
             if (!opsStaff.show || typeof content != 'function') { return; }
             var fontsize = opsStaff.fontsize || radarRadius / scaleData.scalecount * 0.8;
@@ -307,7 +307,7 @@ DChart.Radar = DChart.getCore().__extends({
             }
         };
 
-                var drawSegments = function (animationDecimal, percentAnimComplete) {
+        var drawSegments = function (animationDecimal, percentAnimComplete) {
             if (!options.scaleOverlay) { drawScales(percentAnimComplete); }
             if (multiple) {
                 for (var i = 0, data; data = inner.innerData[i]; i++) {
@@ -352,7 +352,7 @@ DChart.Radar = DChart.getCore().__extends({
                 var e = window.event || e;
                 var location = inner._getMouseLoction(e);
                 var veryShape = fixSingleShape(location.X, location.Y) || fixSingleLabel(location.X, location.Y);
-                                if (inner.tempData.currentMouseShape != veryShape) {
+                if (inner.tempData.currentMouseShape != veryShape) {
                     var shape = inner.tempData.currentMouseShape;
                     if (shape && shape.data) {
                         var mouseleave = typeof shape.data.mouseleave == 'function' ? shape.data.mouseleave : (options.mouseleave || null);
@@ -360,21 +360,21 @@ DChart.Radar = DChart.getCore().__extends({
                             mouseleave(shape.data, e);
                         }
                     }
-                                        inner.tempData.currentMouseShape = veryShape;
+                    inner.tempData.currentMouseShape = veryShape;
                     for (var i = 0, shape; shape = inner.shapes.nodes[i]; i++) {
-                                                if (shape != veryShape && shape.isHovered) {
+                        if (shape != veryShape && shape.isHovered) {
                             shape.isHovered = false;
                             if (shape.hideTip) { shape.hideTip(); }
                         }
                     }
                     if (veryShape) {
-                                                if (veryShape.data) {
+                        if (veryShape.data) {
                             if (options.mouseoverChangeCursor) { inner.canvas.style.cursor = 'pointer'; }
                             veryShape.isHovered = true;
                             if (veryShape.showTip) { veryShape.showTip(); }
                             var mouseover = typeof veryShape.data.mouseover == 'function' ? veryShape.data.mouseover : (options.mouseover || null);
                             if (mouseover) {
-                                                                mouseover(veryShape.data, e);
+                                mouseover(veryShape.data, e);
                             }
                         }
                         else {

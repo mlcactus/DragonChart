@@ -3,7 +3,7 @@
       'Not loaded dragonchart.core.js which must be loaded before other DChart\'s js.');
 }
 else {
-        DChart.Const.Skins.BlackAndWhite.Pie = {
+    DChart.Const.Skins.BlackAndWhite.Pie = {
         SepareateLineColor: null,
         InnerLabelColor: null,
         OuterLabelColor: null,
@@ -12,54 +12,54 @@ else {
     };
 }
 DChart.Pie = DChart.getCore().__extends({
-        GraphType: 'Pie',
-        SetDefaultOptions: function () {
+    GraphType: 'Pie',
+    SetDefaultOptions: function () {
         this._resetSharedOpions();
         this.innerOptions = DChart.Methods.Extend(this.originalDefaultOptions, {
-                        radius: null,
-                        margin: null,
-                        colors: null,
-                        animateRotate: true,
-                        animateScale: true,
-                        startAngle: null,
-                        clickout: true,
-                        separeateLine: {
+            radius: null,
+            margin: null,
+            colors: null,
+            animateRotate: true,
+            animateScale: true,
+            startAngle: null,
+            clickout: true,
+            separeateLine: {
                 show: false,
                 color: null,
                 width: null
             },
-                        innerLabel: {
+            innerLabel: {
                 show: true,
                 content: function (data) {
                     return data.percent.toFixed(1) + '%';
                 },
-                                distance: null,
+                distance: null,
                 color: null,
                 fontsize: null,
                 fontfamily: null
             },
-                        outerLabel: {
+            outerLabel: {
                 show: true,
                 content: function (data) {
                     return data.text + ' ' + data.percent.toFixed(1) + '%';
                 },
-                                withlegend: true,
-                                legendtype: null,
-                                length: null,
-                                color: null,
-                                backcolor: 'rgba(255,255,255,0.3)',
-                                bordercolor: null,
-                                borderwidth: 0.5,
-                                fontsize: null,
-                                fontfamily: null
+                withlegend: true,
+                legendtype: null,
+                length: null,
+                color: null,
+                backcolor: 'rgba(255,255,255,0.3)',
+                bordercolor: null,
+                borderwidth: 0.5,
+                fontsize: null,
+                fontfamily: null
             }
         });
         return this;
     },
-        Draw: function (_data, ops) {
+    Draw: function (_data, ops) {
         var inner = this;
-                if (arguments.length === 1) {
-                        if (!DChart.Methods.IsArray(arguments[0])) {
+        if (arguments.length === 1) {
+            if (!DChart.Methods.IsArray(arguments[0])) {
                 ops = arguments[0];
                 _data = undefined;
             }
@@ -67,16 +67,16 @@ DChart.Pie = DChart.getCore().__extends({
         inner.SetOptions(ops);
         inner._checkOptions();
         var options = inner.innerOptions;
-                if (!options.animateRotate && !options.animateScale) { options.animation = false; }
+        if (!options.animateRotate && !options.animateScale) { options.animation = false; }
         inner.SetData(_data);
         inner._onStart();
-                var coordinate = inner._getDrawableCoordinate();
+        var coordinate = inner._getDrawableCoordinate();
         var margin = DChart.Methods.IsNumber(options.margin) && options.margin > 0 ? options.margin : 15;
-                var maxRadius = Math.min((coordinate.maxX - coordinate.minX) / 3, (coordinate.maxY - coordinate.minY) / 2) - margin * 2;
-                var pieRadius = options.radius && options.radius < maxRadius ? options.radius : maxRadius;
-                inner.coordinates.draw = coordinate;
-                inner.coordinates.pie = { radius: pieRadius, centerX: coordinate.centerX, centerY: coordinate.centerY };
-                var segmentTotal = 0;
+        var maxRadius = Math.min((coordinate.maxX - coordinate.minX) / 3, (coordinate.maxY - coordinate.minY) / 2) - margin * 2;
+        var pieRadius = options.radius && options.radius < maxRadius ? options.radius : maxRadius;
+        inner.coordinates.draw = coordinate;
+        inner.coordinates.pie = { radius: pieRadius, centerX: coordinate.centerX, centerY: coordinate.centerY };
+        var segmentTotal = 0;
         var wrongmsg = DChart.Const.Language[inner.Language];
         for (var i = 0, item; item = inner.innerData[i]; i++) {
             var tmpVal = item.value;
@@ -87,21 +87,21 @@ DChart.Pie = DChart.getCore().__extends({
         }
         var colors = (options.colors && options.colors.length > 0 ? options.colors : null) || DChart.Const.Defaults.FillColors;
         inner.tempData.legendColors = colors;
-                var ctx = inner.ctx;
-                var outlength = pieRadius / 10;
-                inner.shapes.cemicircles = [];
-                inner.shapes.outerLabels = [];
-                inner.coordinates.pie.cemicircles = [];
-                inner.coordinates.pie.outerlabels = [];
+        var ctx = inner.ctx;
+        var outlength = pieRadius / 10;
+        inner.shapes.cemicircles = [];
+        inner.shapes.outerLabels = [];
+        inner.coordinates.pie.cemicircles = [];
+        inner.coordinates.pie.outerlabels = [];
         var cutX = 3; var cutY = 3;
-                var resetOuterLabelPosition = true;
-                var pieshape = function (index, angleMin, angleMax, data, isClickout) {
+        var resetOuterLabelPosition = true;
+        var pieshape = function (index, angleMin, angleMax, data, isClickout) {
             this.index = index;
             this.angleMin = angleMin;
             this.angleMax = angleMax;
             this.data = data;
-                        this.isHovered = false;
-                        this.isClickout = isClickout;
+            this.isHovered = false;
+            this.isClickout = isClickout;
             this.color = function () {
                 return this.data.color || colors[this.index % colors.length];
             };
@@ -109,36 +109,36 @@ DChart.Pie = DChart.getCore().__extends({
                 drawPart(clickout, 1, this.angleMin, this.angleMax, color || this.color());
             };
             this.contact = null;
-                        this.click = function (e, color) {
-                                if (options.clickout) {
+            this.click = function (e, color) {
+                if (options.clickout) {
                     resetOuterLabelPosition = true;
                     this.isClickout = !this.isClickout;
                     inner._createAssists();
                     drawOuterLabels();
-                                        for (var i = 0, shape; shape = inner.shapes.cemicircles[i]; i++) {
+                    for (var i = 0, shape; shape = inner.shapes.cemicircles[i]; i++) {
                         if (shape && shape != this) {
                             shape.redraw(shape.isClickout);
                         }
                         else {
                             this.redraw(this.isClickout);
-                                                        var mouseoverTransp = options.mouseoverTransparency;
+                            var mouseoverTransp = options.mouseoverTransparency;
                             var newColor = 'rgba(255,255,255,' + (mouseoverTransp > 0 && mouseoverTransp < 1 ? mouseoverTransp : 0.2) + ')';
-                                                        this.redraw(this.isClickout, newColor);
+                            this.redraw(this.isClickout, newColor);
                             drawOuterLabels(this, newColor);
                         }
                     }
                     drawInnerLabels();
                 }
-                                if (!options.clickout || this.isClickout) {
-                                        var click = typeof this.data.click == 'function' ? this.data.click : (options.click || null);
+                if (!options.clickout || this.isClickout) {
+                    var click = typeof this.data.click == 'function' ? this.data.click : (options.click || null);
                     if (click) {
                         click(this.data, e);
                     }
                 }
             };
-                        if (options.tip.show && typeof options.tip.content == 'function') {
-                                this.tip = null;
-                                this.showTip = function () {
+            if (options.tip.show && typeof options.tip.content == 'function') {
+                this.tip = null;
+                this.showTip = function () {
                     if (this.tip) {
                         this.tip.style.display = 'inline';
                     }
@@ -148,15 +148,15 @@ DChart.Pie = DChart.getCore().__extends({
                         var top = coordinate.centerY + pieRadius * 0.5 * Math.sin(midAngle);
                         this.tip = inner._createTip(options.tip.content(this.data), left, top);
                         var shape = this;
-                                                shape.tip.onclick = function (e) { shape.click(e); };
+                        shape.tip.onclick = function (e) { shape.click(e); };
                     }
                 };
-                                this.hideTip = function () {
+                this.hideTip = function () {
                     if (this.tip) { this.tip.style.display = 'none'; }
                 };
             }
         };
-                var outerLabelShape = function (content, length, width, height, floatright, floattop, data, contact) {
+        var outerLabelShape = function (content, length, width, height, floatright, floattop, data, contact) {
             this.content = content;
             this.length = length;
             this.width = width;
@@ -165,15 +165,15 @@ DChart.Pie = DChart.getCore().__extends({
             this.floattop = floattop;
             this.endX = function () { return this.left + (this.floatright ? 0 : this.width) };
             this.endY = function () { return this.top + this.height / 2 };
-                        this.data = data;
-                        this.contact = contact;
+            this.data = data;
+            this.contact = contact;
             this.color = function () {
                 return this.contact.color();
             };
             this.index = function () {
                 return this.contact.index;
             };
-                        this.resetposition = function () {
+            this.resetposition = function () {
                 var length = this.length;
                 var centerX = coordinate.centerX;
                 var centerY = coordinate.centerY;
@@ -193,7 +193,7 @@ DChart.Pie = DChart.getCore().__extends({
                 this.top = centerY + pieRadius * distance * sinmid + sinbottom * length - length - cutY;
             };
         };
-                                                                        var drawPart = function (clickout, scalePercent, angleMin, angleMax, color, data, pieshape) {
+        var drawPart = function (clickout, scalePercent, angleMin, angleMax, color, data, pieshape) {
             var midAngle = (angleMin + angleMax) / 2;
             var centerX = coordinate.centerX;
             var centerY = coordinate.centerY;
@@ -210,7 +210,7 @@ DChart.Pie = DChart.getCore().__extends({
             ctx.closePath();
             ctx.fillStyle = color;
             ctx.fill();
-                        if (options.separeateLine.show) {
+            if (options.separeateLine.show) {
                 ctx.lineWidth = options.separeateLine.width || 1;
                 ctx.strokeStyle = options.separeateLine.color || options.lineColor || '#ffffff';
                 ctx.stroke();
@@ -234,11 +234,11 @@ DChart.Pie = DChart.getCore().__extends({
                 pieshape.contact = labelshape;
             }
         };
-                var drawInnerLabels = function (_shape) {
+        var drawInnerLabels = function (_shape) {
             var ops = options.innerLabel;
             if (!(ops.show && typeof ops.content == 'function')) { return; }
             var distance = ops.distance || 0.6;
-                        var drawSingleLabel = function (shape) {
+            var drawSingleLabel = function (shape) {
                 var midAngle = (shape.angleMin + shape.angleMax) / 2;
                 var data = shape.data;
                 var length = shape.isClickout ? (pieRadius * distance + outlength) : pieRadius * distance;
@@ -246,26 +246,26 @@ DChart.Pie = DChart.getCore().__extends({
                 var top = coordinate.centerY + length * Math.sin(midAngle);
                 inner.DrawFigures.createText(ops.content(data), left, top, 'center', data.fontweight, data.fontsize || ops.fontsize || pieRadius / 10, ops.fontfamily, data.fontcolor || ops.color || DChart.Const.Defaults.InnerLabelColor);
             };
-                        if (_shape) { drawSingleLabel(_shape); }
+            if (_shape) { drawSingleLabel(_shape); }
             else {
                 for (var i = 0, shape; shape = inner.shapes.cemicircles[i]; i++) {
                     drawSingleLabel(shape);
                 }
             }
         };
-                var drawOuterLabels = function (_shape, _color) {
+        var drawOuterLabels = function (_shape, _color) {
             var ops = options.outerLabel;
             if (!(ops.show && typeof ops.content == 'function')) { return; }
             if (resetOuterLabelPosition) {
                 for (var i = 0, shape; shape = inner.shapes.outerLabels[i]; i++) { shape.resetposition(); }
                 resetOuterLabelPosition = false;
             }
-                        var resetPosition = function () {
+            var resetPosition = function () {
                 var judgeOuterLabelCross = function (r1, r2) {
                     return Math.max(r1.left, r2.left) <= Math.min(r1.left + r1.width, r2.left + r2.width) && Math.max(r1.top, r2.top) <= Math.min(r1.top + r1.height, r2.top + r2.height);
                 };
-                                var lefttop = []; var leftbuttom = []; var righttop = []; var rightbottom = [];
-                                for (var i = 0, shape; shape = inner.shapes.outerLabels[i]; i++) {
+                var lefttop = []; var leftbuttom = []; var righttop = []; var rightbottom = [];
+                for (var i = 0, shape; shape = inner.shapes.outerLabels[i]; i++) {
                     while (coordinate.minY > shape.top) {
                         shape.top += cutY;
                         shape.left += shape.floatright ? cutX : -cutX;
@@ -281,7 +281,7 @@ DChart.Pie = DChart.getCore().__extends({
                 }
                 var count = 0;
                 var compares = [];
-                                var cycle = function (r) {
+                var cycle = function (r) {
                     if (compares.length > 0) {
                         for (var i = 0, compare; compare = compares[i]; i++) {
                             while (judgeOuterLabelCross(compare, r) && count < 1000) {
@@ -293,7 +293,7 @@ DChart.Pie = DChart.getCore().__extends({
                     }
                     compares.push(r);
                 };
-                                for (var i = lefttop.length - 1; i >= 0; i--) { cycle(lefttop[i]); }
+                for (var i = lefttop.length - 1; i >= 0; i--) { cycle(lefttop[i]); }
                 compares = [];
                 for (var i = 0; i < leftbuttom.length; i++) { cycle(leftbuttom[i]); }
                 compares = [];
@@ -305,35 +305,35 @@ DChart.Pie = DChart.getCore().__extends({
                 var shape = labelshape;
                 if (!color) {
                     inner.DrawFigures.createQuadraticCurve(shape.startX, shape.startY, shape.startX * 0.8 + shape.endX() * 0.2, shape.startY * 0.2 + shape.endY() * 0.8, shape.endX(), shape.endY(), 1, ops.bordercolor);
-                                        if (ops.backcolor) {
+                    if (ops.backcolor) {
                         inner.DrawFigures.createRectangleFill(shape.left, shape.top, shape.width, shape.height, ops.backcolor);
                     }
                     var left = shape.left + (shape.floatright ? cutX + (ops.withlegend ? shape.length + cutX : 0) : shape.width - cutX);
                     var top = shape.top + shape.length + cutY / 2;
                     inner.DrawFigures.createText(shape.content, left, top, shape.floatright ? 'left' : 'right', null, ops.fontsize || (shape.length - 1), ops.fontfamily, ops.color);
-                                        if (ops.borderwidth && ops.borderwidth > 0) {
+                    if (ops.borderwidth && ops.borderwidth > 0) {
                         inner.DrawFigures.createRectangleBorder(shape.left, shape.top, shape.width, shape.height, ops.borderwidth, ops.bordercolor);
                     }
                 }
-                                if (ops.withlegend) {
+                if (ops.withlegend) {
                     var legendtype = ops.legendtype || 's';
                     var color = color || shape.color();
                     inner.DrawFigures.createPointElement(legendtype, shape.left + cutX, shape.top + cutY, shape.length, color, legendtype != 'x', color, 2, legendtype == 'x');
                 }
             };
             if (_shape) {
-                                drawSingleLabel(_shape.contact, _color);
+                drawSingleLabel(_shape.contact, _color);
             }
             else {
                 resetPosition();
-                                inner.coordinates.pie.outerlabels.length = 0;
+                inner.coordinates.pie.outerlabels.length = 0;
                 for (var i = 0, shape; shape = inner.shapes.outerLabels[i]; i++) {
                     drawSingleLabel(shape);
                     inner.coordinates.pie.outerlabels[i] = { index: shape.contact.index, left: shape.left, top: shape.top, width: shape.width, height: shape.height };
                 }
             }
         };
-                var drawSegments = function (animationDecimal, percentAnimComplete) {
+        var drawSegments = function (animationDecimal, percentAnimComplete) {
             var cumulativeAngle = Math.PI * (options.startAngle == null ? -0.5 : options.startAngle);
             var scaleAnimation = options.animation && options.animateScale ? animationDecimal : 1;
             var rotateAnimation = options.animation && options.animateRotate ? animationDecimal : 1;
@@ -342,13 +342,13 @@ DChart.Pie = DChart.getCore().__extends({
                 var segmentAngle = rotateAnimation * (percent / 100 * (Math.PI * 2));
                 var color = item.color || colors[i % colors.length];
                 var angleMax = cumulativeAngle + segmentAngle;
-                                if (percentAnimComplete >= 1) {
+                if (percentAnimComplete >= 1) {
                     item.index = i;
                     item.percent = percent;
                     var _pieshape = new pieshape(i, cumulativeAngle, angleMax, item, item.extended == true);
                     inner.shapes.cemicircles.push(_pieshape);
                     drawPart(item.extended, scaleAnimation, cumulativeAngle, angleMax, color, item, _pieshape);
-                                        inner.coordinates.pie.cemicircles.push({ index: i, percent: percent, angleMin: cumulativeAngle, angleMax: angleMax, color: color });
+                    inner.coordinates.pie.cemicircles.push({ index: i, percent: percent, angleMin: cumulativeAngle, angleMax: angleMax, color: color });
                 }
                 else {
                     drawPart(item.extended, scaleAnimation, cumulativeAngle, angleMax, color);
@@ -360,8 +360,8 @@ DChart.Pie = DChart.getCore().__extends({
                 drawOuterLabels();
             }
         };
-                var mouseEvents = function () {
-                        var fixShape = function (x, y) {
+        var mouseEvents = function () {
+            var fixShape = function (x, y) {
                 var veryShape = null;
                 for (var i = 0, shape; shape = inner.shapes.cemicircles[i]; i++) {
                     var midAngle = (shape.angleMin + shape.angleMax) / 2;
@@ -369,16 +369,16 @@ DChart.Pie = DChart.getCore().__extends({
                     var offY = outlength * Math.sin(midAngle);
                     var centerX = coordinate.centerX + (shape.isClickout ? offX : 0);
                     var centerY = coordinate.centerY + (shape.isClickout ? offY : 0);
-                                        var currentAngle = DChart.Methods.GetCurrentAngle(x, y, centerX, centerY);
-                                        var withinPie = (Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2) <= Math.pow(pieRadius, 2)) && DChart.Methods.JudgeBetweenAngle(shape.angleMin, shape.angleMax, currentAngle);
-                                        var withinOuterLabel = false;
+                    var currentAngle = DChart.Methods.GetCurrentAngle(x, y, centerX, centerY);
+                    var withinPie = (Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2) <= Math.pow(pieRadius, 2)) && DChart.Methods.JudgeBetweenAngle(shape.angleMin, shape.angleMax, currentAngle);
+                    var withinOuterLabel = false;
                     if (options.outerLabel && options.outerLabel.show && shape.contact) {
                         var rectangle = shape.contact;
                         if (x >= rectangle.left && x <= rectangle.left + rectangle.width && y >= rectangle.top && y <= rectangle.top + rectangle.height) {
                             withinOuterLabel = true;
                         }
                     }
-                                        if (withinPie || withinOuterLabel) {
+                    if (withinPie || withinOuterLabel) {
                         veryShape = shape; break;
                     }
                 }
@@ -388,7 +388,7 @@ DChart.Pie = DChart.getCore().__extends({
                 var e = window.event || e;
                 var location = inner._getMouseLoction(e);
                 var veryShape = fixShape(location.X, location.Y);
-                                if (veryShape) {
+                if (veryShape) {
                     veryShape.click(e);
                 }
             };
@@ -396,7 +396,7 @@ DChart.Pie = DChart.getCore().__extends({
                 var e = window.event || e;
                 var location = inner._getMouseLoction(e);
                 var veryShape = fixShape(location.X, location.Y);
-                                if (inner.tempData.currentMouseShape != veryShape) {
+                if (inner.tempData.currentMouseShape != veryShape) {
                     var shape = inner.tempData.currentMouseShape;
                     if (shape) {
                         var mouseleave = typeof shape.data.mouseleave == 'function' ? shape.data.mouseleave : (options.mouseleave || null);
@@ -404,8 +404,8 @@ DChart.Pie = DChart.getCore().__extends({
                             mouseleave(shape.data, e);
                         }
                     }
-                                        inner.tempData.currentMouseShape = veryShape;
-                                        for (var i = 0, shape; shape = inner.shapes.cemicircles[i]; i++) {
+                    inner.tempData.currentMouseShape = veryShape;
+                    for (var i = 0, shape; shape = inner.shapes.cemicircles[i]; i++) {
                         if (shape.isHovered) {
                             shape.isHovered = false;
                             drawOuterLabels(shape, shape.color());
@@ -415,14 +415,14 @@ DChart.Pie = DChart.getCore().__extends({
                     }
                     drawInnerLabels();
                     if (veryShape) {
-                                                veryShape.isHovered = true;
+                        veryShape.isHovered = true;
                         if (options.mouseoverChangeCursor) { inner.canvas.style.cursor = 'pointer'; }
-                                                var mouseoverTransp = options.mouseoverTransparency;
+                        var mouseoverTransp = options.mouseoverTransparency;
                         var newColor = 'rgba(255,255,255,' + (mouseoverTransp > 0 && mouseoverTransp < 1 ? mouseoverTransp : 0.2) + ')';
                         veryShape.redraw(veryShape.isClickout, newColor);
                         drawOuterLabels(veryShape, newColor);
-                                                if (veryShape.showTip) { veryShape.showTip(); }
-                                                var mouseover = typeof veryShape.data.mouseover == 'function' ? veryShape.data.mouseover : (options.mouseover || null);
+                        if (veryShape.showTip) { veryShape.showTip(); }
+                        var mouseover = typeof veryShape.data.mouseover == 'function' ? veryShape.data.mouseover : (options.mouseover || null);
                         if (mouseover) {
                             mouseover(veryShape.data, e);
                         }
@@ -433,11 +433,11 @@ DChart.Pie = DChart.getCore().__extends({
                 }
             };
         };
-                inner._startDrawAndAnimation(drawSegments, mouseEvents);
+        inner._startDrawAndAnimation(drawSegments, mouseEvents);
     },
-        _spreadSkin: function (skinID, newOps) {
+    _spreadSkin: function (skinID, newOps) {
         var skins = DChart.Const.Skins;
-                if (skins[skinID] && skins[skinID].Pie) {
+        if (skins[skinID] && skins[skinID].Pie) {
             var skin = skins[skinID].Pie;
             newOps.separeateLine = {}; newOps.innerLabel = {}; newOps.outerLabel = {};
             newOps.separeateLine.color = skin.SepareateLineColor || null;
