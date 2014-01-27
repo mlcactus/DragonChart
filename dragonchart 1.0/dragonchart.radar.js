@@ -12,17 +12,14 @@ else {
     };
 }
 DChart.Radar = DChart.getCore().__extends({
-    //图形类型
-    GraphType: 'Radar',
-    //设置默认配置(注意统一命名)
-    SetDefaultOptions: function () {
+        GraphType: 'Radar',
+        SetDefaultOptions: function () {
         this._resetSharedOpions();
         this.innerOptions = DChart.Methods.Extend(this.originalDefaultOptions, {
             radius: null,
             margin: null,
             startDirection: null,
-            //蜘蛛网背景线条设置
-            scale: {
+                        scale: {
                 linewidth: 0.5,
                 minvalue: null,
                 maxvalue: null,
@@ -49,16 +46,13 @@ DChart.Radar = DChart.getCore().__extends({
                 nodelinewidth: 1,
                 nodelength: null
             },
-            //外围Label设置
-            labels: {
+                        labels: {
                 labels: null,
-                //字体颜色(若设置为数组，则为每个Label设置相应不同的颜色)
-                fontcolors: null,
+                                fontcolors: null,
                 fontweight: null,
                 fontsize: null,
                 fontfamily: null,
-                //当鼠标指向单个label时，是否显示属于该Label的所有节点
-                showtips: true
+                                showtips: true
             },
             tip: {
                 content: function (data) {
@@ -69,13 +63,10 @@ DChart.Radar = DChart.getCore().__extends({
         });
         return this;
     },
-    //绘图(该方法实现：可以分开也可以同时传入数据和配置、多次调用重新绘图，相互不影响。)
-    Draw: function (_data, ops) {
+        Draw: function (_data, ops) {
         var inner = this;
-        //分配传入参数
-        if (arguments.length === 1) {
-            //如果传入的参数是不是数组，则将该参数当做配置信息而不是数据
-            if (!DChart.Methods.IsArray(arguments[0])) {
+                if (arguments.length === 1) {
+                        if (!DChart.Methods.IsArray(arguments[0])) {
                 ops = arguments[0];
                 _data = undefined;
             }
@@ -85,16 +76,12 @@ DChart.Radar = DChart.getCore().__extends({
         var options = inner.innerOptions;
         inner.SetData(_data);
         inner._onStart();
-        //计算数据极值
-        var minval = null;
+                var minval = null;
         var maxval = null;
-        //表示多维数组
-        var multiple = inner.innerData[0].value.length != undefined;
-        //如果不是多维数据，则阻止绘制图例
-        if (!multiple) { inner.tempData.legendInvalid = true; }
+                var multiple = inner.innerData[0].value.length != undefined;
+                if (!multiple) { inner.tempData.legendInvalid = true; }
         var checkNumber = function (tmpVal) {
-            //检验数据
-            if (typeof tmpVal != 'number') {
+                        if (typeof tmpVal != 'number') {
                 throw new Error(DChart.Const.Language[inner.Language].WrongData + '\'' + tmpVal + '\'' + DChart.Const.Language[inner.Language].NeedNumberData);
             }
             else if (tmpVal < 0) {
@@ -138,38 +125,30 @@ DChart.Radar = DChart.getCore().__extends({
         var dataLength = multiple ? inner.innerData[0].value.length : inner.innerData.length;
         var averageAngle = Math.PI * 2 / dataLength;
 
-        //绘制图形
-        var ctx = inner.ctx;
-        //获取一个半圆的半径与最大半径的比值
-        var getPartPercent = function (val) {
+                var ctx = inner.ctx;
+                var getPartPercent = function (val) {
             return (val - scaleData.minvalue) / (scaleData.maxvalue - scaleData.minvalue);
         };
-        //记录所有图形半圆
-        inner.shapes.nodes = [];
+                inner.shapes.nodes = [];
         inner.shapes.labels = [];
-        //节点的长度(min6,max10)
-        var nodelength = options.radar.nodelength || DChart.Methods.CapValue((coordinate.maxX - coordinate.minX) / 150, 10, 6);
+                var nodelength = options.radar.nodelength || DChart.Methods.CapValue((coordinate.maxX - coordinate.minX) / 150, 10, 6);
 
-        //记录一个节点
-        var nodeShape = function (index, centerX, centerY, length, data) {
+                var nodeShape = function (index, centerX, centerY, length, data) {
             this.index = index;
             this.centerX = centerX;
             this.centerY = centerY;
             this.isHovered = false;
             this.nodelength = length;
             this.data = data;
-            //触发为柱子设定的click事件
-            this.click = function (e) {
+                        this.click = function (e) {
                 var click = typeof this.data.click == 'function' ? this.data.click : (options.click || null);
                 if (click) {
                     click(this.data, e);
                 }
             };
             if (options.tip.show && typeof options.tip.content == 'function') {
-                //提示框
-                this.tip = null;
-                //展现提示框
-                this.showTip = function () {
+                                this.tip = null;
+                                this.showTip = function () {
                     if (this.tip) {
                         this.tip.style.display = 'inline';
                     }
@@ -177,16 +156,14 @@ DChart.Radar = DChart.getCore().__extends({
                         var centerX = this.centerX + nodelength + 5;
                         var centerY = this.centerY - nodelength - 10;
                         this.tip = inner._createTip(options.tip.content.call(options, this.data, false), centerX, centerY);
-                        //当超出可绘图区域右边界时，将提示框左移
-                        if (this.centerX + this.tip.clientWidth > coordinate.maxX) {
+                                                if (this.centerX + this.tip.clientWidth > coordinate.maxX) {
                             inner._changeTip(this.tip, centerX - 5 - nodelength - this.tip.clientWidth);
                         }
                         var shape = this;
                         shape.tip.onclick = function (e) { shape.click(e); };
                     }
                 };
-                //隐藏提示框
-                this.hideTip = function () {
+                                this.hideTip = function () {
                     if (this.tip) { this.tip.style.display = 'none'; }
                 };
             }
@@ -212,8 +189,7 @@ DChart.Radar = DChart.getCore().__extends({
                 var _angle = startAngle + i * averageAngle;
                 var centerX = coordinate.centerX + radius * Math.cos(_angle);
                 var centerY = coordinate.centerY + radius * Math.sin(_angle);
-                //收集辐射图周围的点信息
-                points.push([centerX, centerY, nodefillcolor, nodelinecolor, nodelinewidth, _nodelength, nodetype]);
+                                points.push([centerX, centerY, nodefillcolor, nodelinecolor, nodelinewidth, _nodelength, nodetype]);
                 if (percentAnimComplete >= 1) {
                     var _shapedata = { value: value, click: _data.click, mouseover: _data.mouseover, mouseleave: _data.mouseleave };
                     _shapedata.text = multiple ? data.text : '';
@@ -226,8 +202,7 @@ DChart.Radar = DChart.getCore().__extends({
             for (var i = 0, point; point = points[i]; i++) {
                 inner.DrawFigures.createPointElement(point[6], point[0], point[1], point[5], point[2], true, point[3], point[4], true, true);
                 if (percentAnimComplete >= 1) {
-                    //记录节点信息
-                    var nodecoor = { centerX: point[0], centerY: point[1], length: point[5] };
+                                        var nodecoor = { centerX: point[0], centerY: point[1], length: point[5] };
                     if (multiple) {
                         if (!inner.coordinates.radar.nodes[index]) { inner.coordinates.radar.nodes[index] = []; }
                         inner.coordinates.radar.nodes[index][i] = nodecoor;
@@ -240,8 +215,7 @@ DChart.Radar = DChart.getCore().__extends({
             var opsScale = options.scale;
             var linewidth = opsScale.linewidth;
             if (!(opsScale.linewidth > 0)) { return; }
-            //绘制外围文本及标尺线
-            var opsLabels = options.labels;
+                        var opsLabels = options.labels;
             var labels = opsLabels.labels || [];
             if (!multiple) {
                 for (var i = 0, item; item = inner.innerData[i]; i++) {
@@ -265,13 +239,10 @@ DChart.Radar = DChart.getCore().__extends({
                     inner.DrawFigures.createLine(startX, startY, endX, endY, linewidth, linecolor);
                 }
                 inner.DrawFigures.createLine(coordinate.centerX, coordinate.centerY, startX, startY, linewidth, linecolor);
-                //判断处于半圆的右侧
-                var floatRight = DChart.Methods.JudgeBetweenAngle(-Math.PI * 0.5, Math.PI * 0.5, _startAngle);
+                                var floatRight = DChart.Methods.JudgeBetweenAngle(-Math.PI * 0.5, Math.PI * 0.5, _startAngle);
                 var floatTop = DChart.Methods.JudgeBetweenAngle(-Math.PI, 0, _startAngle);
-                //判断位于正南或正北
-                var inMiddle = DChart.Methods.JudgeBetweenAngle(-Math.PI / 2 - little, -Math.PI / 2 + little, _startAngle) || DChart.Methods.JudgeBetweenAngle(Math.PI / 2 - little, Math.PI / 2 + little, _startAngle);
-                //判断位于正东或正西
-                var inCenter = DChart.Methods.JudgeBetweenAngle(Math.PI - little, Math.PI + little, _startAngle) || DChart.Methods.JudgeBetweenAngle(-little, little, _startAngle);
+                                var inMiddle = DChart.Methods.JudgeBetweenAngle(-Math.PI / 2 - little, -Math.PI / 2 + little, _startAngle) || DChart.Methods.JudgeBetweenAngle(Math.PI / 2 - little, Math.PI / 2 + little, _startAngle);
+                                var inCenter = DChart.Methods.JudgeBetweenAngle(Math.PI - little, Math.PI + little, _startAngle) || DChart.Methods.JudgeBetweenAngle(-little, little, _startAngle);
                 var labelX = startX;
                 var labelY = startY;
                 if (!inMiddle) {
@@ -306,8 +277,7 @@ DChart.Radar = DChart.getCore().__extends({
                 }
             }
 
-            //绘制标尺数
-            var opsStaff = options.staff;
+                        var opsStaff = options.staff;
             var content = opsStaff.content;
             if (!opsStaff.show || typeof content != 'function') { return; }
             var fontsize = opsStaff.fontsize || radarRadius / scaleData.scalecount * 0.8;
@@ -337,8 +307,7 @@ DChart.Radar = DChart.getCore().__extends({
             }
         };
 
-        //单步绘图，用以产生动画。animationDecimal为动画设计完成度（有的动画设计可能导致该值<0或>1，从而实现回转等特效），percentAnimComplete为绘图过程完成度（取值0到1）
-        var drawSegments = function (animationDecimal, percentAnimComplete) {
+                var drawSegments = function (animationDecimal, percentAnimComplete) {
             if (!options.scaleOverlay) { drawScales(percentAnimComplete); }
             if (multiple) {
                 for (var i = 0, data; data = inner.innerData[i]; i++) {
@@ -383,8 +352,7 @@ DChart.Radar = DChart.getCore().__extends({
                 var e = window.event || e;
                 var location = inner._getMouseLoction(e);
                 var veryShape = fixSingleShape(location.X, location.Y) || fixSingleLabel(location.X, location.Y);
-                //当本次鼠标指向的元素与上一次不同时，才执行以下系列动作
-                if (inner.tempData.currentMouseShape != veryShape) {
+                                if (inner.tempData.currentMouseShape != veryShape) {
                     var shape = inner.tempData.currentMouseShape;
                     if (shape && shape.data) {
                         var mouseleave = typeof shape.data.mouseleave == 'function' ? shape.data.mouseleave : (options.mouseleave || null);
@@ -392,25 +360,21 @@ DChart.Radar = DChart.getCore().__extends({
                             mouseleave(shape.data, e);
                         }
                     }
-                    //记录本次鼠标说指向的元素
-                    inner.tempData.currentMouseShape = veryShape;
+                                        inner.tempData.currentMouseShape = veryShape;
                     for (var i = 0, shape; shape = inner.shapes.nodes[i]; i++) {
-                        //如果绘制了阴影，则全部柱状图都需重绘
-                        if (shape != veryShape && shape.isHovered) {
+                                                if (shape != veryShape && shape.isHovered) {
                             shape.isHovered = false;
                             if (shape.hideTip) { shape.hideTip(); }
                         }
                     }
                     if (veryShape) {
-                        //给该元素打上“已指向”的标记
-                        if (veryShape.data) {
+                                                if (veryShape.data) {
                             if (options.mouseoverChangeCursor) { inner.canvas.style.cursor = 'pointer'; }
                             veryShape.isHovered = true;
                             if (veryShape.showTip) { veryShape.showTip(); }
                             var mouseover = typeof veryShape.data.mouseover == 'function' ? veryShape.data.mouseover : (options.mouseover || null);
                             if (mouseover) {
-                                //触发设定的mouseover事件
-                                mouseover(veryShape.data, e);
+                                                                mouseover(veryShape.data, e);
                             }
                         }
                         else {

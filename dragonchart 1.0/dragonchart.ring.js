@@ -1,11 +1,9 @@
-﻿//判断是否加载dragonchart.core
-if (!window.DChart) {
+﻿if (!window.DChart) {
     throw new Error('未能加载dragonchart.core.js，该js必须在其他DChart框架的js加载之前被引用。\n' +
       'Not loaded dragonchart.core.js which must be loaded before other DChart\'s js.');
 }
 else {
-    //补充Ring中特有的皮肤设置，SkinID与core中需一对一（可以比core少，但不能增加）
-    DChart.Const.Skins.BlackAndWhite.Ring = {
+        DChart.Const.Skins.BlackAndWhite.Ring = {
         SepareateLineColor: null,
         InnerLabelColor: null,
         OuterLabelColor: null,
@@ -14,77 +12,55 @@ else {
     };
 }
 DChart.Ring = DChart.getCore().__extends({
-    //图形类型
-    GraphType: 'Ring',
-    //设置默认配置(注意统一命名)
-    SetDefaultOptions: function () {
+        GraphType: 'Ring',
+        SetDefaultOptions: function () {
         this._resetSharedOpions();
         this.innerOptions = DChart.Methods.Extend(this.originalDefaultOptions, {
             innerRadius: null,
             outerRadius: null,
             margin: null,
             colors: null,
-            //半径方向是否产生动画
-            animateRotate: true,
-            //角度方向是否产生动画
-            animateScale: true,
-            //展开角度，取值范围为-1到1，0表示从右侧展开，-0.5表示从上侧等等
-            startAngle: null,
-            //当鼠标点击时，点中的半圆是否向外延伸一段距离，以明显的表示被选中
-            clickout: true,
-            //饼状图半圆的分割线
-            separeateLine: {
+                        animateRotate: true,
+                        animateScale: true,
+                        startAngle: null,
+                        clickout: true,
+                        separeateLine: {
                 show: false,
                 color: null,
                 width: null
             },
-            //内部Label相关选项
-            innerLabel: {
+                        innerLabel: {
                 show: true,
                 content: function (data) {
                     return data.percent.toFixed(1) + '%';
                 },
-                //文本中心距离饼状图圆点的距离与该园半径的比值
-                distance: null,
+                                distance: null,
                 color: null,
                 fontsize: null,
                 fontfamily: null
             },
-            //外部Label相关设置
-            outerLabel: {
+                        outerLabel: {
                 show: true,
                 content: function (data) {
                     return data.text + ' ' + data.percent.toFixed(1) + '%';
                 },
-                //是否显示图例小图标
-                withlegend: true,
-                //小图标类型：c(ycle)-圆形，s(quare)-正方形，t(riangle)-三角形
-                legendtype: null,
-                //小图标的宽度
-                length: null,
-                //文本颜色
-                color: null,
-                //背景颜色
-                backcolor: 'rgba(255,255,255,0.3)',
-                //边框颜色
-                bordercolor: null,
-                //边框颜色，null或<=0表示不绘制
-                borderwidth: 0.5,
-                //字体大小
-                fontsize: null,
-                //字体
-                fontfamily: null
+                                withlegend: true,
+                                legendtype: null,
+                                length: null,
+                                color: null,
+                                backcolor: 'rgba(255,255,255,0.3)',
+                                bordercolor: null,
+                                borderwidth: 0.5,
+                                fontsize: null,
+                                fontfamily: null
             }
         });
         return this;
     },
-    //绘图(该方法实现：可以分开也可以同时传入数据和配置、多次调用重新绘图，相互不影响。)
-    Draw: function (_data, ops) {
+        Draw: function (_data, ops) {
         var inner = this;
-        //分配传入参数
-        if (arguments.length === 1) {
-            //如果传入的参数是不是数组，则将该参数当做配置信息而不是数据
-            if (!DChart.Methods.IsArray(arguments[0])) {
+                if (arguments.length === 1) {
+                        if (!DChart.Methods.IsArray(arguments[0])) {
                 ops = arguments[0];
                 _data = undefined;
             }
@@ -92,29 +68,22 @@ DChart.Ring = DChart.getCore().__extends({
         inner.SetOptions(ops);
         inner._checkOptions();
         var options = inner.innerOptions;
-        //如果横向与纵向动画都被取消，则取消整个动画
-        if (!options.animateRotate && !options.animateScale) { options.animation = false; }
+                if (!options.animateRotate && !options.animateScale) { options.animation = false; }
         inner.SetData(_data);
         inner._onStart();
         var wrongmsg = DChart.Const.Language[inner.Language];
-        //获取除去标题及图例外的“可自由绘图”区域的坐标信息
-        var coordinate = inner._getDrawableCoordinate();
+                var coordinate = inner._getDrawableCoordinate();
         var margin = DChart.Methods.IsNumber(options.margin) && options.margin > 0 ? options.margin : 15;
-        //能够绘制饼状图的最大直径
-        var maxOuterRadius = Math.min((coordinate.maxX - coordinate.minX) / 3, (coordinate.maxY - coordinate.minY) / 2) - margin * 2;
-        //计算饼状图园的半径长度
-        var pieOuterRadius = options.outerRadius && options.outerRadius < maxOuterRadius ? options.outerRadius : maxOuterRadius;
+                var maxOuterRadius = Math.min((coordinate.maxX - coordinate.minX) / 3, (coordinate.maxY - coordinate.minY) / 2) - margin * 2;
+                var pieOuterRadius = options.outerRadius && options.outerRadius < maxOuterRadius ? options.outerRadius : maxOuterRadius;
         var pieInnerRadius = options.innerRadius && options.innerRadius > maxOuterRadius * 0.1 && options.innerRadius < maxOuterRadius ? options.innerRadius : maxOuterRadius * 0.7;
         if (pieOuterRadius <= pieInnerRadius) {
             throw new Error(wrongmsg.WrongSet + wrongmsg.OuterRadiusShouldBigger);
         }
         var separeateLineWidth = options.separeateLine.show ? (options.separeateLine.width || 0.5) : 0;
-        //记录绘制半圆的可用区域信息
-        inner.coordinates.draw = coordinate;
-        //记录饼状图的半径、圆点
-        inner.coordinates.ring = { outerRadius: pieOuterRadius, innerRadius: pieInnerRadius, centerX: coordinate.centerX, centerY: coordinate.centerY };
-        //记录总值数
-        var segmentTotal = 0;
+                inner.coordinates.draw = coordinate;
+                inner.coordinates.ring = { outerRadius: pieOuterRadius, innerRadius: pieInnerRadius, centerX: coordinate.centerX, centerY: coordinate.centerY };
+                var segmentTotal = 0;
         for (var i = 0, item; item = inner.innerData[i]; i++) {
             var tmpVal = item.value;
             if (typeof tmpVal != 'number' || tmpVal < 0) {
@@ -124,10 +93,8 @@ DChart.Ring = DChart.getCore().__extends({
         }
         var colors = (options.colors && options.colors.length > 0 ? options.colors : null) || DChart.Const.Defaults.FillColors;
         inner.tempData.legendColors = colors;
-        //绘制图形
-        var ctx = inner.ctx;
-        //当点击半圆时向外移出一段距离的参考距离
-        var outlength = pieOuterRadius / 10;
+                var ctx = inner.ctx;
+                var outlength = pieOuterRadius / 10;
         inner.shapes.cemicircles = [];
         inner.shapes.outerLabels = [];
         inner.coordinates.ring.cemicircles = [];
@@ -232,15 +199,7 @@ DChart.Ring = DChart.getCore().__extends({
                 this.top = centerY + pieOuterRadius * distance * sinmid + sinbottom * length - length - cutY;
             };
         };
-        //绘制一个饼状图半圆元素
-        //clickout：是否为点击时向外伸出一段距离
-        //scalePercent：半径比列（动态更改此值可实现动画）
-        //angleMin：半圆开始角度
-        //angleMax：半圆结束角度
-        //color：填充半圆的颜色，采用rgba格式
-        //data：半圆代表的数据，当该值不为空时，表示要绘制Label
-        //pieshape：该半圆所关联的pieshape，不为空表示未第一次绘制，否则为重绘，此时部分元素无需再绘制
-        var drawPart = function (clickout, scalePercent, angleMin, angleMax, color, data, pieshape) {
+                                                                        var drawPart = function (clickout, scalePercent, angleMin, angleMax, color, data, pieshape) {
             var midAngle = (angleMin + angleMax) / 2;
             var centerX = coordinate.centerX;
             var centerY = coordinate.centerY;
@@ -259,15 +218,13 @@ DChart.Ring = DChart.getCore().__extends({
             ctx.closePath();
             ctx.fillStyle = color;
             ctx.fill();
-            //绘制半圆分割线
-            if (options.separeateLine.show) {
+                        if (options.separeateLine.show) {
                 ctx.lineWidth = separeateLineWidth;
                 ctx.strokeStyle = options.separeateLine.color || options.lineColor || '#ffffff';
                 ctx.stroke();
                 ctx.restore();
             }
-            //绘制外部Label
-            var ops = options.outerLabel;
+                        var ops = options.outerLabel;
             if (data && ops.show && typeof ops.content == 'function') {
                 var length = ops.length || pieOuterRadius / 12;
                 ctx.save();
@@ -285,13 +242,11 @@ DChart.Ring = DChart.getCore().__extends({
                 pieshape.contact = labelshape;
             }
         };
-        //绘制InnerLabel
-        var drawInnerLabels = function (_shape) {
+                var drawInnerLabels = function (_shape) {
             var ops = options.innerLabel;
             if (!(ops.show && typeof ops.content == 'function')) { return; }
             var distance = (ops.distance || 0.85);
-            //绘制单个半圆的innerLabel
-            var drawSingleLabel = function (shape) {
+                        var drawSingleLabel = function (shape) {
                 var midAngle = (shape.angleMin + shape.angleMax) / 2;
                 var data = shape.data;
                 var length = shape.isClickout ? (pieOuterRadius * distance + outlength) : pieOuterRadius * distance;
@@ -299,31 +254,26 @@ DChart.Ring = DChart.getCore().__extends({
                 var top = coordinate.centerY + length * Math.sin(midAngle);
                 inner.DrawFigures.createText(ops.content(data), left, top, 'center', data.fontweight, data.fontsize || ops.fontsize || pieOuterRadius / 10, ops.fontfamily, data.fontcolor || ops.color || DChart.Const.Defaults.InnerLabelColor);
             };
-            //如果指定某个半圆，则只绘制该半圆的InnerLabel，否则绘制所有半圆的InnerLabel
-            if (_shape) { drawSingleLabel(_shape); }
+                        if (_shape) { drawSingleLabel(_shape); }
             else {
                 for (var i = 0, shape; shape = inner.shapes.cemicircles[i]; i++) {
                     drawSingleLabel(shape);
                 }
             }
         };
-        //_shape:一个半圆shape
-        var drawOuterLabels = function (_shape, _color) {
+                var drawOuterLabels = function (_shape, _color) {
             var ops = options.outerLabel;
             if (!(ops.show && typeof ops.content == 'function')) { return; }
             if (resetOuterLabelPosition) {
                 for (var i = 0, shape; shape = inner.shapes.outerLabels[i]; i++) { shape.resetposition(); }
                 resetOuterLabelPosition = false;
             }
-            //重新调整OuterLabel的位置，防止相互覆盖
-            var resetPosition = function () {
+                        var resetPosition = function () {
                 var judgeOuterLabelCross = function (r1, r2) {
                     return Math.max(r1.left, r2.left) <= Math.min(r1.left + r1.width, r2.left + r2.width) && Math.max(r1.top, r2.top) <= Math.min(r1.top + r1.height, r2.top + r2.height);
                 };
-                //分别分类为“左上、左下、右上、右下”区域
-                var lefttop = []; var leftbuttom = []; var righttop = []; var rightbottom = [];
-                //防止超出边界
-                for (var i = 0, shape; shape = inner.shapes.outerLabels[i]; i++) {
+                                var lefttop = []; var leftbuttom = []; var righttop = []; var rightbottom = [];
+                                for (var i = 0, shape; shape = inner.shapes.outerLabels[i]; i++) {
                     while (coordinate.minY > shape.top) {
                         shape.top += cutY;
                         shape.left += shape.floatright ? cutX : -cutX;
@@ -339,8 +289,7 @@ DChart.Ring = DChart.getCore().__extends({
                 }
                 var count = 0;
                 var compares = [];
-                //循环规范OuterLabel的相对位置
-                var cycle = function (r) {
+                                var cycle = function (r) {
                     if (compares.length > 0) {
                         for (var i = 0, compare; compare = compares[i]; i++) {
                             while (judgeOuterLabelCross(compare, r) && count < 1000) {
@@ -352,8 +301,7 @@ DChart.Ring = DChart.getCore().__extends({
                     }
                     compares.push(r);
                 };
-                //不同区域进行不同的优先级重排列
-                for (var i = lefttop.length - 1; i >= 0; i--) { cycle(lefttop[i]); }
+                                for (var i = lefttop.length - 1; i >= 0; i--) { cycle(lefttop[i]); }
                 compares = [];
                 for (var i = 0; i < leftbuttom.length; i++) { cycle(leftbuttom[i]); }
                 compares = [];
@@ -365,41 +313,35 @@ DChart.Ring = DChart.getCore().__extends({
                 var shape = labelshape;
                 if (!color) {
                     inner.DrawFigures.createQuadraticCurve(shape.startX, shape.startY, shape.startX * 0.8 + shape.endX() * 0.2, shape.startY * 0.2 + shape.endY() * 0.8, shape.endX(), shape.endY(), 1, ops.bordercolor);
-                    //绘制背景色
-                    if (ops.backcolor) {
+                                        if (ops.backcolor) {
                         inner.DrawFigures.createRectangleFill(shape.left, shape.top, shape.width, shape.height, ops.backcolor);
                     }
                     var left = shape.left + (shape.floatright ? cutX + (ops.withlegend ? shape.length + cutX : 0) : shape.width - cutX);
                     var top = shape.top + shape.length + cutY / 2;
                     inner.DrawFigures.createText(shape.content, left, top, shape.floatright ? 'left' : 'right', null, ops.fontsize || (shape.length - 1), ops.fontfamily, ops.color);
-                    //绘制边框
-                    if (ops.borderwidth && ops.borderwidth > 0) {
+                                        if (ops.borderwidth && ops.borderwidth > 0) {
                         inner.DrawFigures.createRectangleBorder(shape.left, shape.top, shape.width, shape.height, ops.borderwidth, ops.bordercolor);
                     }
                 }
-                //绘制小图标，无论是鼠标指上还是重新绘制都需要绘制
-                if (ops.withlegend) {
+                                if (ops.withlegend) {
                     var legendtype = ops.legendtype || 's';
                     var color = color || shape.color();
                     inner.DrawFigures.createPointElement(legendtype, shape.left + cutX, shape.top + cutY, shape.length, color, legendtype != 'x', color, 2, legendtype == 'x');
                 }
             };
             if (_shape) {
-                //绘制一个半圆的OuterLabel
-                drawSingleLabel(_shape.contact, _color);
+                                drawSingleLabel(_shape.contact, _color);
             }
             else {
                 resetPosition();
-                //绘制所有半圆的OuterLabel
-                inner.coordinates.ring.outerlabels.length = 0;
+                                inner.coordinates.ring.outerlabels.length = 0;
                 for (var i = 0, shape; shape = inner.shapes.outerLabels[i]; i++) {
                     drawSingleLabel(shape);
                     inner.coordinates.ring.outerlabels[i] = { index: shape.contact.index, left: shape.left, top: shape.top, width: shape.width, height: shape.height };
                 }
             }
         };
-        //单步绘图，用以产生动画。animationDecimal为动画设计完成度（有的动画设计可能导致该值<0或>1，从而实现回转等特效），percentAnimComplete为绘图过程完成度（取值0到1）
-        var drawSegments = function (animationDecimal, percentAnimComplete) {
+                var drawSegments = function (animationDecimal, percentAnimComplete) {
             var cumulativeAngle = Math.PI * (options.startAngle == null ? -0.5 : options.startAngle);
             var scaleAnimation = options.animation && options.animateScale ? animationDecimal : 1;
             var rotateAnimation = options.animation && options.animateRotate ? animationDecimal : 1;
@@ -408,15 +350,13 @@ DChart.Ring = DChart.getCore().__extends({
                 var segmentAngle = rotateAnimation * (percent / 100 * (Math.PI * 2));
                 var color = item.color || colors[i % colors.length];
                 var angleMax = cumulativeAngle + segmentAngle;
-                //最后完成绘图时，记录所有绘制的半圆
-                if (percentAnimComplete >= 1) {
+                                if (percentAnimComplete >= 1) {
                     item.index = i;
                     item.percent = percent;
                     var _pieshape = new pieshape(i, cumulativeAngle, angleMax, item, item.extended == true);
                     inner.shapes.cemicircles.push(_pieshape);
                     drawPart(item.extended, scaleAnimation, cumulativeAngle, angleMax, color, item, _pieshape);
-                    //记录饼状图半圆信息
-                    inner.coordinates.ring.cemicircles.push({ index: i, percent: percent, angleMin: cumulativeAngle, angleMax: angleMax, color: color });
+                                        inner.coordinates.ring.cemicircles.push({ index: i, percent: percent, angleMin: cumulativeAngle, angleMax: angleMax, color: color });
                 }
                 else {
                     drawPart(item.extended, scaleAnimation, cumulativeAngle, angleMax, color);
@@ -428,10 +368,8 @@ DChart.Ring = DChart.getCore().__extends({
                 drawOuterLabels();
             }
         };
-        //设置鼠标事件
-        var mouseEvents = function () {
-            //获取鼠标事件发生时所在的图形半圆，若没有，则返回null
-            var fixShape = function (x, y) {
+                var mouseEvents = function () {
+                        var fixShape = function (x, y) {
                 var veryShape = null;
                 for (var i = 0, shape; shape = inner.shapes.cemicircles[i]; i++) {
                     var midAngle = (shape.angleMin + shape.angleMax) / 2;
@@ -439,21 +377,17 @@ DChart.Ring = DChart.getCore().__extends({
                     var offY = outlength * Math.sin(midAngle);
                     var centerX = coordinate.centerX + (shape.isClickout ? offX : 0);
                     var centerY = coordinate.centerY + (shape.isClickout ? offY : 0);
-                    //当前角度
-                    var currentAngle = DChart.Methods.GetCurrentAngle(x, y, centerX, centerY);
-                    //判断鼠标是否在半圆上
-                    var distance2 = Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2);
+                                        var currentAngle = DChart.Methods.GetCurrentAngle(x, y, centerX, centerY);
+                                        var distance2 = Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2);
                     var withinPie = distance2 >= Math.pow(pieInnerRadius, 2) && distance2 <= Math.pow(pieOuterRadius, 2) && DChart.Methods.JudgeBetweenAngle(shape.angleMin, shape.angleMax, currentAngle);
-                    //判断鼠标是否在所属的OuterLabel中 
-                    var withinOuterLabel = false;
+                                        var withinOuterLabel = false;
                     if (options.outerLabel && options.outerLabel.show && shape.contact) {
                         var rectangle = shape.contact;
                         if (x >= rectangle.left && x <= rectangle.left + rectangle.width && y >= rectangle.top && y <= rectangle.top + rectangle.height) {
                             withinOuterLabel = true;
                         }
                     }
-                    //当鼠标在半圆内或在所属的OuterLabel中，则将该半圆选中
-                    if (withinPie || withinOuterLabel) {
+                                        if (withinPie || withinOuterLabel) {
                         veryShape = shape; break;
                     }
                 }
@@ -463,8 +397,7 @@ DChart.Ring = DChart.getCore().__extends({
                 var e = window.event || e;
                 var location = inner._getMouseLoction(e);
                 var veryShape = fixShape(location.X, location.Y);
-                //若发生在目标半圆中，判断是否设置click事件，若有则调用。
-                if (veryShape) {
+                                if (veryShape) {
                     veryShape.click(e);
                 }
             };
@@ -509,14 +442,11 @@ DChart.Ring = DChart.getCore().__extends({
                 }
             };
         };
-        //开始绘图
-        inner._startDrawAndAnimation(drawSegments, mouseEvents);
+                inner._startDrawAndAnimation(drawSegments, mouseEvents);
     },
-    //设置Ring类型图的特有的皮肤
-    _spreadSkin: function (skinID, newOps) {
+        _spreadSkin: function (skinID, newOps) {
         var skins = DChart.Const.Skins;
-        //判断该Skin是否存在
-        if (skins[skinID] && skins[skinID].Ring) {
+                if (skins[skinID] && skins[skinID].Ring) {
             var skin = skins[skinID].Ring;
             newOps.separeateLine = {}; newOps.innerLabel = {}; newOps.outerLabel = {};
             newOps.separeateLine.color = skin.SepareateLineColor || null;

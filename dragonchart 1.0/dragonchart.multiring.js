@@ -16,18 +16,14 @@ DChart.MultiRing = DChart.getCore().__extends({
     SetDefaultOptions: function () {
         this._resetSharedOpions();
         this.innerOptions = DChart.Methods.Extend(this.originalDefaultOptions, {
-            //圆的半径
-            radius: null,
+                        radius: null,
             margin: null,
-            //每个环中各个半圆的颜色
-            colors: null,
+                        colors: null,
             animateRotate: true,
             animateScale: true,
             startAngle: null,
-            //各个环的长度(所有环的长度相加应小于radius)
-            lengths: null,
-            //多维数组各维代表的含义
-            labels: null,
+                        lengths: null,
+                        labels: null,
             separeateLine: {
                 show: true,
                 color: null,
@@ -105,8 +101,7 @@ DChart.MultiRing = DChart.getCore().__extends({
             }
             segmentTotal[k] = tmpTotal;
         }
-        //检验设置的各个环状图的宽度之和是否超出半径大小
-        if (lengths) {
+                if (lengths) {
             var totalLength = 0;
             for (var k = 0; k < ringCount; k++) {
                 var length = lengths[k % lengths.length];
@@ -240,8 +235,7 @@ DChart.MultiRing = DChart.getCore().__extends({
                 pieshape.contact = labelshape;
             }
         };
-        //绘制内部文本
-        var drawInnerLabels = function (_shape) {
+                var drawInnerLabels = function (_shape) {
             var ops = options.innerLabel;
             if (!(ops.show && typeof ops.content == 'function')) { return; }
             var drawSingleLabel = function (shape) {
@@ -259,23 +253,19 @@ DChart.MultiRing = DChart.getCore().__extends({
                 }
             }
         };
-        //_shape:一个半圆shape
-        var drawOuterLabels = function (_shape, _color) {
+                var drawOuterLabels = function (_shape, _color) {
             var ops = options.outerLabel;
             if (!(ops.show && typeof ops.content == 'function')) { return; }
             if (resetOuterLabelPosition) {
                 for (var i = 0, shape; shape = inner.shapes.outerLabels[i]; i++) { shape.resetposition(); }
                 resetOuterLabelPosition = false;
             }
-            //重新调整OuterLabel的位置，防止相互覆盖
-            var resetPosition = function () {
+                        var resetPosition = function () {
                 var judgeOuterLabelCross = function (r1, r2) {
                     return Math.max(r1.left, r2.left) <= Math.min(r1.left + r1.width, r2.left + r2.width) && Math.max(r1.top, r2.top) <= Math.min(r1.top + r1.height, r2.top + r2.height);
                 };
-                //分别分类为“左上、左下、右上、右下”区域
-                var lefttop = []; var leftbuttom = []; var righttop = []; var rightbottom = [];
-                //防止超出边界
-                for (var i = 0, shape; shape = inner.shapes.outerLabels[i]; i++) {
+                                var lefttop = []; var leftbuttom = []; var righttop = []; var rightbottom = [];
+                                for (var i = 0, shape; shape = inner.shapes.outerLabels[i]; i++) {
                     while (coordinate.minY > shape.top) {
                         shape.top += cutY;
                         shape.left += shape.floatright ? cutX : -cutX;
@@ -291,8 +281,7 @@ DChart.MultiRing = DChart.getCore().__extends({
                 }
                 var count = 0;
                 var compares = [];
-                //循环规范OuterLabel的相对位置
-                var cycle = function (r) {
+                                var cycle = function (r) {
                     if (compares.length > 0) {
                         for (var i = 0, compare; compare = compares[i]; i++) {
                             while (judgeOuterLabelCross(compare, r) && count < 1000) {
@@ -304,8 +293,7 @@ DChart.MultiRing = DChart.getCore().__extends({
                     }
                     compares.push(r);
                 };
-                //不同区域进行不同的优先级重排列
-                for (var i = lefttop.length - 1; i >= 0; i--) { cycle(lefttop[i]); }
+                                for (var i = lefttop.length - 1; i >= 0; i--) { cycle(lefttop[i]); }
                 compares = [];
                 for (var i = 0; i < leftbuttom.length; i++) { cycle(leftbuttom[i]); }
                 compares = [];
@@ -317,33 +305,28 @@ DChart.MultiRing = DChart.getCore().__extends({
                 var shape = labelshape;
                 if (!color) {
                     inner.DrawFigures.createQuadraticCurve(shape.startX, shape.startY, shape.startX * 0.8 + shape.endX() * 0.2, shape.startY * 0.2 + shape.endY() * 0.8, shape.endX(), shape.endY(), 1, ops.bordercolor);
-                    //绘制背景色
-                    if (ops.backcolor) {
+                                        if (ops.backcolor) {
                         inner.DrawFigures.createRectangleFill(shape.left, shape.top, shape.width, shape.height, ops.backcolor);
                     }
                     var left = shape.left + (shape.floatright ? cutX + (ops.withlegend ? shape.length + cutX : 0) : shape.width - cutX);
                     var top = shape.top + shape.length + cutY / 2;
                     inner.DrawFigures.createText(shape.content, left, top, shape.floatright ? 'left' : 'right', null, ops.fontsize || (shape.length - 1), ops.fontfamily, ops.color);
-                    //绘制边框
-                    if (ops.borderwidth && ops.borderwidth > 0) {
+                                        if (ops.borderwidth && ops.borderwidth > 0) {
                         inner.DrawFigures.createRectangleBorder(shape.left, shape.top, shape.width, shape.height, ops.borderwidth, ops.bordercolor);
                     }
                 }
-                //绘制小图标，无论是鼠标指上还是重新绘制都需要绘制
-                if (ops.withlegend) {
+                                if (ops.withlegend) {
                     var legendtype = ops.legendtype || 's';
                     var color = color || shape.color();
                     inner.DrawFigures.createPointElement(legendtype, shape.left + cutX, shape.top + cutY, shape.length, color, legendtype != 'x', color, 2, legendtype == 'x');
                 }
             };
             if (_shape) {
-                //绘制一个半圆的OuterLabel
-                drawSingleLabel(_shape.contact, _color);
+                                drawSingleLabel(_shape.contact, _color);
             }
             else {
                 resetPosition();
-                //绘制所有半圆的OuterLabel
-                inner.coordinates.multiRing.outerlabels.length = 0;
+                                inner.coordinates.multiRing.outerlabels.length = 0;
                 for (var i = 0, shape; shape = inner.shapes.outerLabels[i]; i++) {
                     drawSingleLabel(shape);
                     inner.coordinates.multiRing.outerlabels[i] = { index: shape.contact.index, left: shape.left, top: shape.top, width: shape.width, height: shape.height };
@@ -388,8 +371,7 @@ DChart.MultiRing = DChart.getCore().__extends({
                 drawOuterLabels();
             }
         };
-        //显示单个半圆
-        var showSingleShape = function (shape) {
+                var showSingleShape = function (shape) {
             shape.isHovered = true;
             if (options.mouseoverChangeCursor) { inner.canvas.style.cursor = 'pointer'; }
             var mouseoverTransp = options.mouseoverTransparency;
@@ -397,8 +379,7 @@ DChart.MultiRing = DChart.getCore().__extends({
             if (shape.showTip) { shape.showTip(); }
         };
         var mouseEvents = function () {
-            //定位一个半圆
-            var fixShape = function (x, y) {
+                        var fixShape = function (x, y) {
                 var veryShape = null;
                 for (var i = 0, shape; shape = inner.shapes.cemicircles[i]; i++) {
                     var midAngle = (shape.angleMin + shape.angleMax) / 2;
@@ -411,10 +392,8 @@ DChart.MultiRing = DChart.getCore().__extends({
                 }
                 return veryShape;
             };
-            //通过外部Label定位多个半圆
-            var fixIndex = function (x, y) {
-                //根据index来查找目标半圆
-                var index = null;
+                        var fixIndex = function (x, y) {
+                                var index = null;
                 for (var i = 0, rectangle; rectangle = inner.shapes.outerLabels[i]; i++) {
                     if (x >= rectangle.left && x <= rectangle.left + rectangle.width && y >= rectangle.top && y <= rectangle.top + rectangle.height) {
                         index = rectangle.data.index;

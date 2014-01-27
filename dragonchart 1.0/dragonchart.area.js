@@ -31,7 +31,6 @@ DChart.Area = DChart.getCore().__extends({
                 sort: true
             },
             valueAxis: {
-                //是否堆积计算
                 heap: false
             },
             node: {
@@ -62,18 +61,12 @@ DChart.Area = DChart.getCore().__extends({
                     }
                 }
             },
-            //对齐线
             alignline: {
-                //是否显示纵向标尺线
                 verticalline: true,
-                //是否显示横向标尺线（仅当merge为true时有效）
                 horizontalline: true,
-                //标尺线的颜色
                 linecolor: null
             },
-            //背景
             scale: {
-                //是否绘制垂直方向的比例线（默认为true，这样横向与纵向的比例线就交错在一起了）
                 drawvertical: true
             }
         });
@@ -90,24 +83,18 @@ DChart.Area = DChart.getCore().__extends({
         inner.SetOptions(ops);
         inner._checkOptions();
         var options = inner.innerOptions;
-        //文本轴的数据类型不能设置为p
         if (options.labelAxis.valueType == 'p') {
             throw new Error(DChart.Const.Language[inner.Language].WrongParam + DChart.Const.Language[inner.Language].LabelAxisValueTypeCannotBePercent);
         }
         inner.SetData(_data);
         inner._onStart();
-        //指示绘制动画时的每一帧都重新绘制“外围”图形，即调用内部_createAssists方法。
         inner.tempData.recreateAssists = true;
-        //记录所有节点图
         inner.shapes.nodes = [];
         var lValueType = options.labelAxis.valueType;
         var axisData = inner._formatAxisData(options.valueAxis.heap);
-        //指示值轴数据类型是否为p
         var percentType = axisData.vValueType == 'p';
         var heapCompute = axisData.heapCompute;
-        //堆积计算
         if (heapCompute) {
-            //记录堆积后的值
             inner.tempData.heaps = [];
             for (var i = 0; i < axisData.tuftCount; i++) {
                 inner.tempData.heaps[i] = [];
@@ -129,12 +116,10 @@ DChart.Area = DChart.getCore().__extends({
         inner.coordinates.draw = coordinate;
         inner.coordinates.area = { nodes: [] };
         var ctx = inner.ctx;
-        //节点的长度(min6,max10)
         var nodelength = options.node.length || DChart.Methods.CapValue((axisSize.maxX - axisSize.minX) / 100, 10, 6);
         var fillcolors = (options.area.fillcolors && options.area.fillcolors.length > 0 ? options.area.fillcolors : null) || DChart.Const.Defaults.TransparentColors;
         var linecolors = (options.area.linecolors && options.area.linecolors.length > 0 ? options.area.linecolors : null) || DChart.Const.Defaults.FillColors;
         inner.tempData.legendColors = linecolors;
-        //记录一个节点
         var nodeShape = function (index, centerX, centerY, length, data) {
             this.index = index;
             this.centerX = centerX;
@@ -142,7 +127,6 @@ DChart.Area = DChart.getCore().__extends({
             this.isHovered = false;
             this.nodelength = length;
             this.data = data;
-            //触发为柱子设定的click事件
             this.click = function (e) {
                 var click = typeof this.data.click == 'function' ? this.data.click : (options.click || null);
                 if (click) {
@@ -150,9 +134,7 @@ DChart.Area = DChart.getCore().__extends({
                 }
             };
             if (options.tip.show && typeof options.tip.content == 'function') {
-                //提示框
                 this.tip = null;
-                //展现提示框
                 this.showTip = function () {
                     if (this.tip) {
                         this.tip.style.display = 'inline';
@@ -161,7 +143,6 @@ DChart.Area = DChart.getCore().__extends({
                         var centerX = this.centerX + nodelength + 5;
                         var centerY = this.centerY - nodelength - 10;
                         this.tip = inner._createTip(options.tip.content.call(options, this.data, false), centerX, centerY);
-                        //当超出可绘图区域右边界时，将提示框左移
                         if (this.centerX + this.tip.clientWidth > axisSize.maxX) {
                             inner._changeTip(this.tip, centerX - 5 - nodelength - this.tip.clientWidth);
                         }
@@ -169,13 +150,11 @@ DChart.Area = DChart.getCore().__extends({
                         shape.tip.onclick = function (e) { shape.click(e); };
                     }
                 };
-                //隐藏提示框
                 this.hideTip = function () {
                     if (this.tip) { this.tip.style.display = 'none'; }
                 };
             }
         };
-        //绘制一个节点元素
         var drawnode = function (x, y, linecolor, areainfo) {
             var ops = options.node;
             if (ops.show) {
@@ -187,7 +166,6 @@ DChart.Area = DChart.getCore().__extends({
                 inner.DrawFigures.createPointElement(nodetype, x, y, _nodelength, fillcolor, true, nodelinecolor, nodelinewidth, true, true);
             }
         };
-        //当堆积计算时，绘制上下曲线之间的区域填充颜色
         var drawHeapClose = function (points0, points1, fillcolor) {
             var points = points0.__copy();
             for (var i = points1.length - 1; i >= 0; i--) {
@@ -195,7 +173,6 @@ DChart.Area = DChart.getCore().__extends({
             }
             inner.DrawFigures.createCloseFigure(points, fillcolor);
         };
-        //记录重新绘制图形所需的数据
         var redraw = {};
         var drawSegments = function (animationDecimal, percentAnimComplete) {
             var getValueHeight = function (val) {
@@ -207,11 +184,9 @@ DChart.Area = DChart.getCore().__extends({
                     return (axisSize.maxX - axisSize.minX) * inner._getFormatDiff(axisData.lValueType, axisData.lMinValue, val) / inner._getFormatDiff(axisData.lValueType, axisData.lMinValue, axisData.lMaxValue);
                 }
                 else {
-                    //多维曲线，label与节点位置分离，因此节点left的计算与该节点在数组的位置相关
                     if (axisData.multiple) {
                         return (axisSize.maxX - axisSize.minX) * val / (inner.innerData[0].value.length - 1);
                     }
-                        //一维曲线，label取自inner.innerData中的每个元素中的text，因此节点的left位置与该节点在一维数组的位置相关
                     else {
                         return (axisSize.maxX - axisSize.minX) * val / (inner.innerData.length - 1);
                     }
@@ -233,7 +208,6 @@ DChart.Area = DChart.getCore().__extends({
             var lvalue, vvalue, vpercent, centerX, centerY;
             if (axisData.multiple) {
                 var points = []; var pointsold = [];
-                //记录绘制节点和线的数据
                 var nodepoints = [];
                 for (var i = 0, item; item = inner.innerData[i]; i++) {
                     var linewidth = item.linewidth || options.area.linewidth || DChart.Const.Defaults.LineWidth;
@@ -256,7 +230,6 @@ DChart.Area = DChart.getCore().__extends({
                         }
                         addNodeShape(i, k, centerX, centerY, item.nodelength || nodelength, vvalue, lvalue, text, vpercent, item.click, item.mouseover, item.mouseleave);
                     }
-                    //绘制曲线的有效点（不包括坐标轴上的点）
                     var linepoints = points.slice(1, points.length - 1);
                     if (heapCompute && i > 0) {
                         drawHeapClose(linepoints, pointsold, fillcolor);
@@ -273,7 +246,6 @@ DChart.Area = DChart.getCore().__extends({
                     pointsold = linepoints.__copy();
                     points = [];
                 }
-                //先绘背景，再绘线和节点
                 for (var i = 0; i < nodepoints.length; i++) {
                     var linepoints = nodepoints[i].linepoints;
                     inner.DrawFigures.createPointsLine(linepoints, nodepoints[i].linewidth, nodepoints[i].linecolor);
@@ -364,7 +336,6 @@ DChart.Area = DChart.getCore().__extends({
             };
             var fixRowShapes = function (x, y) {
                 var shapes = [];
-                //找到的shape对应文本轴的位置
                 var locX = 0;
                 if (y <= axisSize.maxY && y >= axisSize.minY && x >= axisSize.minX && x <= axisSize.maxX) {
                     var index = 0;
@@ -397,10 +368,8 @@ DChart.Area = DChart.getCore().__extends({
             inner.canvas.onmousemove = function (e) {
                 var e = window.event || e;
                 var location = inner._getMouseLoction(e);
-                //当文本轴使用值类型或者为一维数组时，可定位单个节点
                 var showByNode = axisData.lValueType || !axisData.multiple;
                 var veryShape = fixSingleShape(location.X, location.Y);
-                //当本次鼠标指向的元素与上一次不同时，才执行以下系列动作
                 if (inner.tempData.currentMouseShape != veryShape) {
                     var shape = inner.tempData.currentMouseShape;
                     if (shape) {
@@ -409,17 +378,14 @@ DChart.Area = DChart.getCore().__extends({
                             mouseleave(shape.data, e);
                         }
                     }
-                    //记录本次鼠标说指向的元素
                     inner.tempData.currentMouseShape = veryShape;
                     for (var i = 0, shape; shape = inner.shapes.nodes[i]; i++) {
-                        //如果绘制了阴影，则全部柱状图都需重绘
                         if (shape != veryShape && shape.isHovered) {
                             shape.isHovered = false;
                             if (showByNode && shape.hideTip) { shape.hideTip(); }
                         }
                     }
                     if (veryShape) {
-                        //给该元素打上“已指向”的标记
                         veryShape.isHovered = true;
                         if (options.mouseoverChangeCursor) { inner.canvas.style.cursor = 'pointer'; }
                         if (showByNode) {
@@ -440,7 +406,6 @@ DChart.Area = DChart.getCore().__extends({
                         }
                         var mouseover = typeof veryShape.data.mouseover == 'function' ? veryShape.data.mouseover : (options.mouseover || null);
                         if (mouseover) {
-                            //触发设定的mouseover事件
                             mouseover(veryShape.data, e);
                         }
                     }
@@ -453,12 +418,10 @@ DChart.Area = DChart.getCore().__extends({
                         }
                     }
                 }
-                //通过鼠标在文本轴的位置来定位节点
                 if (!showByNode) {
                     var fixed = fixRowShapes(location.X, location.Y);
                     if (inner.tempData.locX != fixed.locX) {
                         inner.tempData.locX = fixed.locX;
-                        //消除上次显示的tip
                         if (options.tip.merge) {
                             for (var i = 0; i < mergeTips.length; i++) {
                                 if (mergeTips[i]) {
@@ -481,9 +444,7 @@ DChart.Area = DChart.getCore().__extends({
                                 var alignlinecolor = options.alignline.linecolor || DChart.Const.Defaults.AlignLineColor;
                                 inner.DrawFigures.createLine(fixed.locX, axisSize.minY, fixed.locX, axisSize.maxY + 1, 1, alignlinecolor);
                             }
-                            //合并显示Tip
                             if (options.tip.merge) {
-                                //通过判断单个的showTip是否存在，就能够判断是否显示tip
                                 if (fixed.shapes[0].showTip) {
                                     var mergeTip = mergeTips[fixed.shapes[0].index];
                                     if (!mergeTip) {
