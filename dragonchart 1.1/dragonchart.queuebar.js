@@ -57,7 +57,7 @@ DChart.QueueBar = DChart.getCore().__extends({
             throw new Error(wrongmsg.WrongParam + wrongmsg.ValueTypeMustNotBePercent);
         }
         inner._onStart();
-        inner.tempData.upturnAxis = true;
+        inner.tempData.invertAxis = true;
 
         var splitpoint = options.splitpoint;
         var computeSplitPoint = splitpoint == null;
@@ -182,7 +182,7 @@ DChart.QueueBar = DChart.getCore().__extends({
                     var val = item.value[k];
                     var isSmall = val < splitpoint;
                     var cut = demanCount / 2 - (contrastmode ? parseInt(i / 2) : i);
-                    var top = axisSize.startPos + axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
+                    var top = axisSize.startPos - axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
                     var width = getWidth(val);
                     var left = isSmall ? axisSize.splitLinePos - width : axisSize.splitLinePos;
                     if (percentAnimComplete >= 1) {

@@ -88,7 +88,13 @@ DChart.NestedPie3D._drawgraphic = function (inner, graphicID, innerData, options
     var cutX = 3; var cutY = 3;
     var zoomX = options.reflection3d.zoomX || 1.2;
     var zoomY = options.reflection3d.zoomY || 0.9;
+    if (inner._configs._isIE678.isIE678) {
+        zoomX = 1; zoomY = 1;
+    }
     var radiusInfo = inner._computeRadiusForPies(options, zoomX, zoomY);
+    if (inner._configs._isIE678.isIE678) {
+        radiusInfo.maxRadius *= 0.9;
+    }
     var pieOuterRadius = !options.outerRadius || !DChart.Methods.IsNumber(options.outerRadius) ? radiusInfo.maxRadius : options.outerRadius;
     var pieInnerRadius = options.innerRadius && options.innerRadius > pieOuterRadius * 0.1 && options.innerRadius < pieOuterRadius ? options.innerRadius : pieOuterRadius * 0.7;
     if (pieOuterRadius <= pieInnerRadius) {
@@ -185,7 +191,7 @@ DChart.NestedPie3D._drawgraphic = function (inner, graphicID, innerData, options
         return res;
     };
 
-    var pieshape = function (indexX, indexY, percent, color, angleMin, angleMax, midAngle, isLeft, isBottom, data) {
+    var pieshape = function (indexX, indexY, percent, color, angleMin, angleMax, midAngle, data) {
         this.indexX = indexX;
         this.indexY = indexY;
         this.percent = percent;
@@ -193,8 +199,6 @@ DChart.NestedPie3D._drawgraphic = function (inner, graphicID, innerData, options
         this.angleMin = angleMin;
         this.angleMax = angleMax;
         this.midAngle = midAngle;
-        this.isLeft = isLeft;
-        this.isBottom = isBottom;
         this.data = data;
         this.isHovered = false;
         this.isInnerPie = indexY == null;;
@@ -431,9 +435,10 @@ DChart.NestedPie3D._drawgraphic = function (inner, graphicID, innerData, options
                 if (ops.backcolor) {
                     inner.DrawFigures.createRectangleFill(shape.left, shape.top, shape.width, shape.height, ops.backcolor);
                 }
+                var fontsize = ops.fontsize || (shape.length - 1);
                 var left = shape.left + (shape.floatright ? cutX + (ops.withlegend ? shape.length + cutX : 0) : shape.width - cutX);
-                var top = shape.top + shape.length + cutY / 2;
-                inner.DrawFigures.createText(shape.content, left, top, shape.floatright ? 'left' : 'right', null, ops.fontsize || (shape.length - 1), ops.fontfamily, ops.color);
+                var top = shape.top + shape.length / 2 + fontsize / 2 + cutY / 2;
+                inner.DrawFigures.createText(shape.content, left, top, shape.floatright ? 'left' : 'right', null, fontsize, ops.fontfamily, ops.color);
                 if (ops.borderwidth && ops.borderwidth > 0) {
                     inner.DrawFigures.createRectangleBorder(shape.left, shape.top, shape.width, shape.height, ops.borderwidth, ops.bordercolor);
                 }
@@ -480,7 +485,6 @@ DChart.NestedPie3D._drawgraphic = function (inner, graphicID, innerData, options
         var scaleAnimation = options.animation && options.animateScale ? animationDecimal : 1;
         var rotateAnimation = options.animation && options.animateRotate ? animationDecimal : 1;
         var complete = percentAnimComplete >= 1;
-
         var pieshapes = [];
         for (var i = 0, item; item = innerData[i]; i++) {
             var percent = (item.value / allTotal) * 100;
@@ -489,13 +493,12 @@ DChart.NestedPie3D._drawgraphic = function (inner, graphicID, innerData, options
             var angleMin = cumulativeAngle;
             var angleMax = cumulativeAngle + rotate;
             var midAngle = (angleMin + angleMax) / 2;
-            var isLeft = DChart.Methods.JudgeBetweenAngle(-Math.PI * 0.5, Math.PI * 0.5, midAngle);
-            var isBottom = DChart.Methods.JudgeBetweenAngle(angleMin, angleMax, Math.PI / 2);
             if (complete) {
                 item.percent = percent;
                 inner.coordinates.nestedpie[graphicID].cemicircles.push({ indexX: i, indexY: null, percent: percent, radius: pieInnerRadius, angleMin: angleMin, angleMax: angleMax, color: color });
             }
-            var _pieshape = new pieshape(i, null, percent, color, angleMin, angleMax, midAngle, isLeft, isBottom, item);
+            var _pieshape = new pieshape(i, null, percent, color, angleMin, angleMax, midAngle, item);
+            inner._methodsFor3D.computeLoc(_pieshape);
             pieshapes.push(_pieshape);
             cumulativeAngle += rotate;
             var subitems = item.subitems;
@@ -506,16 +509,16 @@ DChart.NestedPie3D._drawgraphic = function (inner, graphicID, innerData, options
                     var angleMinSub = cumulativeAngleSub;
                     var angleMaxSub = cumulativeAngleSub + rotateSub;
                     var midAngleSub = (angleMinSub + angleMaxSub) / 2;
-                    var isLeftSub = DChart.Methods.JudgeBetweenAngle(-Math.PI * 0.5, Math.PI * 0.5, midAngleSub);
-                    var isBottomSub = DChart.Methods.JudgeBetweenAngle(angleMinSub, angleMaxSub, Math.PI / 2);
                     var colorSub = subitem.color || item.subcolor || color;
                     if (complete) {
                         subitem.percent = percentSub;
                         subitem.subpercent = (subitem.value / subTotals[i]) * 100;
                         inner.coordinates.nestedpie[graphicID].cemicircles.push({ indexX: i, indexY: j, percent: percentSub, innerRadius: pieInnerRadius, outerRadius: pieOuterRadius, angleMin: angleMinSub, angleMax: angleMaxSub, color: colorSub });
                     }
-                    var _pieshape = new pieshape(i, j, percent, colorSub, angleMinSub, angleMaxSub, midAngleSub, isLeftSub, isBottomSub, subitem);
-                    pieshapes.push(_pieshape);
+                    var _pieshapeSub = new pieshape(i, j, percent, colorSub, angleMinSub, angleMaxSub, midAngleSub, subitem);
+                    _pieshapeSub.superShape = _pieshape;
+                    inner._methodsFor3D.computeLoc(_pieshapeSub);
+                    pieshapes.push(_pieshapeSub);
                     cumulativeAngleSub += rotateSub;
                 }
             }
@@ -529,18 +532,7 @@ DChart.NestedPie3D._drawgraphic = function (inner, graphicID, innerData, options
                 else { return 1; }
             }
             else {
-                if (shapeitem0.isBottom) { return 1; }
-                else if (shapeitem1.isBottom) { return -1; }
-                else {
-                    if (shapeitem0.isLeft == shapeitem1.isLeft) {
-                        if (shapeitem0.isLeft) { return shapeitem0.midAngle < shapeitem1.midAngle ? -1 : 1; }
-                        else { return shapeitem0.midAngle < shapeitem1.midAngle ? 1 : -1; }
-                    }
-                    else {
-                        if (shapeitem0.isLeft) { return -1; }
-                        else { return 1; }
-                    }
-                }
+                return inner._methodsFor3D.pieshapeSort(shapeitem0, shapeitem1);
             }
         });
         var drawReflection = function (shapeitem, type, data, pieshape) {

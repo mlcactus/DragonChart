@@ -83,7 +83,7 @@ DChart.RangeBar = DChart.getCore().__extends({
             throw new Error(wrongmsg.WrongParam + wrongmsg.ValueTypeMustNotBePercent);
         }
         inner._onStart();
-        inner.tempData.upturnAxis = true;
+        inner.tempData.invertAxis = true;
         inner.tempData.valueAxiaDataIsRange = true;
         inner.shapes.bars = [];
         var axisData = inner._formatAxisData();
@@ -207,7 +207,7 @@ DChart.RangeBar = DChart.getCore().__extends({
                     for (var k = 0; k < values.length; k++) {
                         var val = values[k];
                         var cut = axisData.demanCount / 2 - i;
-                        var top = axisSize.startPos + axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
+                        var top = axisSize.startPos - axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
                         var width = getDiffWidth(val[0], val[1], true);
                         var left = axisSize.minX + getDiffWidth(axisData.vMinValue, Math.min(val[0], val[1]));
                         if (percentAnimComplete >= 1) {
@@ -229,7 +229,7 @@ DChart.RangeBar = DChart.getCore().__extends({
                     }
                 }
                 else {
-                    var top = axisSize.startPos + axisSize.labelDistance * i - length / 2;
+                    var top = axisSize.startPos - axisSize.labelDistance * i - length / 2;
                     var val = percentType ? item.percent : item.value;
                     var width = getDiffWidth(val[0], val[1], true);
                     var left = axisSize.minX + getDiffWidth(axisData.vMinValue, Math.min(val[0], val[1]));

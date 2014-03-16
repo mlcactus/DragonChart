@@ -55,7 +55,7 @@ DChart.HeapBar = DChart.getCore().__extends({
             throw new Error(wrongmsg.WrongData + wrongmsg.DataMustBeMultipleArray);
         }
         inner._onStart();
-        inner.tempData.upturnAxis = true;
+        inner.tempData.invertAxis = true;
         inner.tempData.notAllowValueNegative = true;
         var axisData = inner._formatAxisData(true);
         var valids = inner._calculateOutersValid();
@@ -147,7 +147,7 @@ DChart.HeapBar = DChart.getCore().__extends({
 
             var height = (options.animateY ? animationDecimal : 1) * length;
             for (var i = 0; i < axisData.tuftCount; i++) {
-                var top = axisSize.startPos + axisSize.labelDistance * i - length / 2;
+                var top = axisSize.startPos - axisSize.labelDistance * i - length / 2;
                 var tmpwidth = 0;
                 var cutlines = [];
                 var lastshapes = [];

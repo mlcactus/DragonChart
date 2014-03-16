@@ -92,7 +92,7 @@ DChart.Radar._drawgraphic = function (inner, graphicID, innerData, options) {
     var labelfontcolors = options.labels.fontcolors && options.labels.fontcolors.length > 0 ? options.labels.fontcolors : null;
     if (graphicID == inner.ID) {
         if (!multiple) { inner._configs.legendInvalid = true; }
-        inner._configs.legendColors = linecolors;
+        inner._configs.legendColors = fillcolors;
         inner.coordinates.draw = radiusInfo.coordinate;
     }
     var radarRadius = !options.radius || !DChart.Methods.IsNumber(options.radius) ? radiusInfo.maxRadius : options.radius;
@@ -200,7 +200,7 @@ DChart.Radar._drawgraphic = function (inner, graphicID, innerData, options) {
             }
         }
         var labelfontsize = opsLabels.fontsize || radarRadius / 8;
-        var linecolor = opsScale.linecolor || 'rgb(190,190,190)';
+        var linecolor = opsScale.linecolor || options.lineColor || 'rgb(190,190,190)';
         var little = 0.1;
         var cut = 5;
         for (var k = 0; k < dataLength; k++) {

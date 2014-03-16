@@ -73,6 +73,9 @@ DChart.Histogram._drawgraphic = function (inner, graphicID, innerData, options) 
             gap = axisSize.labelDistance / 20;
         }
     }
+    else {
+        gap = 0;
+    }
     if (length && length > 0) {
         var maxLen = axisData.multiple ? ((axisSize.labelDistance - (axisData.demanCount + 1) * gap) / axisData.demanCount) : axisSize.labelDistance * 0.8;
         length = Math.min(length, maxLen);

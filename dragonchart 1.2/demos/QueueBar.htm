@@ -1,7 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>DChart入门教程Demo-QueueBar</title>
+    <title>DragonChart入门教程Demo-QueueBar</title>
+
+    <script type="text/javascript" src="../excanvas.js"></script>
 
     <script type="text/javascript" src="../dragonchart.core.js"></script>
 
@@ -14,7 +16,7 @@
                 { text: 'Female', value: [5, 7, 5, 16, 18, 20, 17, 8, 5, 15, 6, 3, 7, 2, 3, 4, 5, 3, 1, 3, 2], color: '#8B0000' }
             ];
             var options = {
-                valueType: 'n', animationSteps: 60, splitpoint: '0',
+                valueType: 'n', animationSteps: 60, splitpoint: 0,
                 title: { content: 'Number of male and female students at different academic rank.' },
                 subTitle: { content: 'The data is apocryphal.' },
                 labelAxis: { labels: ['100 +', '95-99', '90-94', '85-89', '80-84', '75-79', '70-74', '65-69', '60-64', '55-59', '50-54', '45-49', '40-44', '35-39', '30-34', '25-29', '20-24', '15-19', '10-14', '5-9', '0-4'], fontsize: 15 },

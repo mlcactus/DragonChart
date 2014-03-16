@@ -85,7 +85,13 @@ DChart.Ring3D._drawgraphic = function (inner, graphicID, innerData, options) {
     var cutX = 3; var cutY = 3;
     var zoomX = options.reflection3d.zoomX || 1.2;
     var zoomY = options.reflection3d.zoomY || 0.9;
+    if (inner._configs._isIE678.isIE678) {
+        zoomX = 1; zoomY = 1;
+    }
     var radiusInfo = inner._computeRadiusForPies(options, zoomX, zoomY);
+    if (inner._configs._isIE678.isIE678) {
+        radiusInfo.maxRadius *= 0.9;
+    }
     var pieOuterRadius = !options.outerRadius || !DChart.Methods.IsNumber(options.outerRadius) ? radiusInfo.maxRadius : options.outerRadius;
     var pieInnerRadius = options.innerRadius && options.innerRadius > pieOuterRadius * 0.1 && options.innerRadius < pieOuterRadius ? options.innerRadius : pieOuterRadius * 0.7;
     if (pieOuterRadius <= pieInnerRadius) {
@@ -170,15 +176,13 @@ DChart.Ring3D._drawgraphic = function (inner, graphicID, innerData, options) {
         this.endY = function () { return this.top + this.height / 2; };
     };
 
-    var pieshape = function (index, color, percent, angleMin, angleMax, midAngle, isLeft, isBottom, data, isClickout) {
+    var pieshape = function (index, color, percent, angleMin, angleMax, midAngle, data, isClickout) {
         this.index = index;
         this.color = color;
         this.percent = percent;
         this.angleMin = angleMin;
         this.angleMax = angleMax;
         this.midAngle = midAngle;
-        this.isLeft = isLeft;
-        this.isBottom = isBottom;
         this.isHovered = false;
         this.isClickout = isClickout;
         this.data = data;
@@ -351,9 +355,10 @@ DChart.Ring3D._drawgraphic = function (inner, graphicID, innerData, options) {
                 if (ops.backcolor) {
                     inner.DrawFigures.createRectangleFill(shape.left, shape.top, shape.width, shape.height, ops.backcolor);
                 }
+                var fontsize = ops.fontsize || (shape.length - 1);
                 var left = shape.left + (shape.floatright ? cutX + (ops.withlegend ? shape.length + cutX : 0) : shape.width - cutX);
-                var top = shape.top + shape.length + cutY / 2;
-                inner.DrawFigures.createText(shape.content, left, top, shape.floatright ? 'left' : 'right', null, ops.fontsize || (shape.length - 1), ops.fontfamily, ops.color);
+                var top = shape.top + shape.length / 2 + fontsize / 2 + cutY / 2;
+                inner.DrawFigures.createText(shape.content, left, top, shape.floatright ? 'left' : 'right', null, fontsize, ops.fontfamily, ops.color);
                 if (ops.borderwidth && ops.borderwidth > 0) {
                     inner.DrawFigures.createRectangleBorder(shape.left, shape.top, shape.width, shape.height, ops.borderwidth, ops.bordercolor);
                 }
@@ -391,30 +396,16 @@ DChart.Ring3D._drawgraphic = function (inner, graphicID, innerData, options) {
             var angleMin = cumulativeAngle;
             var angleMax = cumulativeAngle + rotate;
             var midAngle = (angleMin + angleMax) / 2;
-            var isLeft = DChart.Methods.JudgeBetweenAngle(-Math.PI * 0.5, Math.PI * 0.5, midAngle);
-            var isBottom = DChart.Methods.JudgeBetweenAngle(angleMin, angleMax, Math.PI / 2);
             if (complete) {
                 item.percent = percent;
                 inner.coordinates.ring[graphicID].cemicircles.push({ index: i, percent: percent, angleMin: angleMin, angleMax: angleMax, color: color });
             }
-            var _pieshape = new pieshape(i, color, percent, angleMin, angleMax, midAngle, isLeft, isBottom, item, item.extended);
+            var _pieshape = new pieshape(i, color, percent, angleMin, angleMax, midAngle, item, item.extended);
+            inner._methodsFor3D.computeLoc(_pieshape);
             pieshapes.push(_pieshape);
             cumulativeAngle += rotate;
         }
-        pieshapes.sort(function (shapeitem0, shapeitem1) {
-            if (shapeitem0.isBottom) { return 1; }
-            else if (shapeitem1.isBottom) { return -1; }
-            else {
-                if (shapeitem0.isLeft == shapeitem1.isLeft) {
-                    if (shapeitem0.isLeft) { return shapeitem0.midAngle < shapeitem1.midAngle ? -1 : 1; }
-                    else { return shapeitem0.midAngle < shapeitem1.midAngle ? 1 : -1; }
-                }
-                else {
-                    if (shapeitem0.isLeft) { return -1; }
-                    else { return 1; }
-                }
-            }
-        });
+        pieshapes.sort(inner._methodsFor3D.pieshapeSort);
         var drawReflection = function (shapeitem, type, data, pieshape) {
             drawPart(type, shapeitem.data.extended, scaleAnimation, shapeitem.angleMin, shapeitem.angleMax, shapeitem.color, false, shapeitem.data.darksidecolor, complete && type == 3 ? shapeitem.data : null, complete && type == 3 ? shapeitem : null);
         };

@@ -593,6 +593,9 @@ DChart.getCore = function () {
             if (targetdiv.clientHeight == 0) {
                 targetdiv.style.height = (targetdiv.clientWidth / 2).toString() + "px";
             }
+            targetdiv.style.position = 'relative';
+            targetdiv.style.left = '0px';
+            targetdiv.style.top = '0px';
             targetdiv.style.padding = '';
         }
         var getPosNum = function (num) {
@@ -1311,18 +1314,18 @@ DChart.getCore = function () {
             var tiptype = inner.innerOptions.tip.tiptype || DChart.Const.Defaults.TipType;
             tipBox.setAttribute('class', inner.randoms[tiptype]);
             tipBox.style.position = 'absolute';
-            tipBox.style.left = targetdiv.offsetLeft + left + inner.calculatedBasic.offleft + 'px';
-            tipBox.style.top = targetdiv.offsetTop + top + inner.calculatedBasic.offtop + 'px';
+            tipBox.style.left = left + inner.calculatedBasic.offleft + 'px';
+            tipBox.style.top = top + inner.calculatedBasic.offtop + 'px';
             tipBox.innerHTML = content;
             targetdiv.appendChild(tipBox);
             return tipBox;
         };
         inner._changeTip = function (tip, left, top) {
             if (left) {
-                tip.style.left = targetdiv.offsetLeft + left + inner.calculatedBasic.offleft + 'px';
+                tip.style.left = left + inner.calculatedBasic.offleft + 'px';
             }
             if (top) {
-                tip.style.top = targetdiv.offsetTop + top + inner.calculatedBasic.offtop + 'px';
+                tip.style.top = top + inner.calculatedBasic.offtop + 'px';
             }
         };
         inner._getDrawableCoordinate = function () {
@@ -1818,7 +1821,7 @@ DChart.getCore = function () {
             if (!valids.AxisValid) { return null; }
             var options = inner.innerOptions;
             var axisData = inner.tempData.axisData;
-            var upturnAxis = inner.tempData.upturnAxis;
+            var invertAxis = inner.tempData.invertAxis;
             var canvasBorderWidth = inner.innerOptions.background.borderwidth || 0;
             var valids = valids || inner._calculateOutersValid();
             var legendSize = valids.legendValid ? inner._computeLegend() : null;
@@ -1828,33 +1831,33 @@ DChart.getCore = function () {
             var availableWidth = inner.canvas.width - canvasBorderWidth * 2 - (legendSize ? legendSize.occupyLeft : 0) - (legendSize ? legendSize.occupyRight : 0);
             var availableHeight = inner.canvas.height - canvasBorderWidth * 2 - titleHeight - (legendSize ? legendSize.occupyTop : 0) - (legendSize ? legendSize.occupyBottom : 0);
 
-            var tmpAxisWidth = availableWidth / (upturnAxis ? 8 : DChart.Const.Defaults.AxisYDrawableCut[axisData.vValueType]);
+            var tmpAxisWidth = availableWidth / (invertAxis ? 8 : DChart.Const.Defaults.AxisYDrawableCut[axisData.vValueType]);
             var tmpAxisHeight = availableHeight / DChart.Const.Defaults.AxisXDrawableCut;
-            var labelAxisLength = options.labelAxis.length || (upturnAxis ? tmpAxisWidth : tmpAxisHeight);
-            var valueAxisLength = options.valueAxis.length || (upturnAxis ? tmpAxisHeight : tmpAxisWidth);
-            var yAxisWidth = upturnAxis ? labelAxisLength : valueAxisLength;
-            var xAxisHeight = upturnAxis ? valueAxisLength : labelAxisLength;
-            var captionLength = upturnAxis ? yAxisWidth / 8 : (valids.titleValid || legendSize && legendSize.occupyTop > 0 ? xAxisHeight / 8 : titleHeight * 2.5);
+            var labelAxisLength = options.labelAxis.length || (invertAxis ? tmpAxisWidth : tmpAxisHeight);
+            var valueAxisLength = options.valueAxis.length || (invertAxis ? tmpAxisHeight : tmpAxisWidth);
+            var yAxisWidth = invertAxis ? labelAxisLength : valueAxisLength;
+            var xAxisHeight = invertAxis ? valueAxisLength : labelAxisLength;
+            var captionLength = invertAxis ? yAxisWidth / 8 : (valids.titleValid || legendSize && legendSize.occupyTop > 0 ? xAxisHeight / 8 : titleHeight * 2.5);
             var margin = (valids.legendValid && legendSize.placeY == 'middle' ? captionLength / 2 : yAxisWidth / 3);
             var scaleLineWidth = options.scale.linewidth == null ? 1 : options.scale.linewidth;
             var closeLineWidth = options.close.linewidth || scaleLineWidth || 1;
             var labelAxisLineWidth = options.labelAxis.linewidth == null ? 1 : options.labelAxis.linewidth;
             var valueAxisLineWidth = options.valueAxis.linewidth == null ? 1 : options.valueAxis.linewidth;
-            var xAxisLineWidth = upturnAxis ? valueAxisLineWidth : labelAxisLineWidth;
-            var yAxisLineWidth = upturnAxis ? labelAxisLineWidth : valueAxisLineWidth;
-            var axisValueCut = (upturnAxis ? availableWidth - margin - yAxisWidth - captionLength : availableHeight - xAxisHeight - captionLength) / axisData.vScalecount;
+            var xAxisLineWidth = invertAxis ? valueAxisLineWidth : labelAxisLineWidth;
+            var yAxisLineWidth = invertAxis ? labelAxisLineWidth : valueAxisLineWidth;
+            var axisValueCut = (invertAxis ? availableWidth - margin - yAxisWidth - captionLength : availableHeight - xAxisHeight - captionLength) / axisData.vScalecount;
             var crossLength = options.cross.length || valueAxisLength / 15;
 
-            var maxX = inner.canvas.width - canvasBorderWidth - margin - (legendSize ? legendSize.occupyRight : 0) - (upturnAxis ? captionLength : 0);
+            var maxX = inner.canvas.width - canvasBorderWidth - margin - (legendSize ? legendSize.occupyRight : 0) - (invertAxis ? captionLength : 0);
             var maxY = inner.canvas.height - xAxisHeight - canvasBorderWidth - (legendSize ? legendSize.occupyBottom : 0);
-            var minX = upturnAxis ? (maxX - axisData.vScalecount * axisValueCut) : (canvasBorderWidth + yAxisWidth + (legendSize ? legendSize.occupyLeft : 0));
-            var minY = upturnAxis ? (canvasBorderWidth + titleHeight + (legendSize && legendSize.occupyTop > 0 ? legendSize.occupyTop : xAxisHeight / 10)) : (maxY - axisData.vScalecount * axisValueCut);
+            var minX = invertAxis ? (maxX - axisData.vScalecount * axisValueCut) : (canvasBorderWidth + yAxisWidth + (legendSize ? legendSize.occupyLeft : 0));
+            var minY = invertAxis ? (canvasBorderWidth + titleHeight + (legendSize && legendSize.occupyTop > 0 ? legendSize.occupyTop : xAxisHeight / 10)) : (maxY - axisData.vScalecount * axisValueCut);
 
             var multiple = axisData.multiple;
             var labelCount = axisData.lLabels.length || (multiple ? inner.innerData[0].value.length : inner.innerData.length);
             var fromFirstLeft = DChart.Const.AxisFromFirstLeft.__contains(inner.GraphType);
-            var labelDistance = (upturnAxis ? maxY - minY : maxX - minX) / (labelCount + (fromFirstLeft ? -1 : (multiple ? 1 / (inner.innerData.length + 1) : 1 / 3)));
-            var startPos = (upturnAxis ? minY : minX) + (fromFirstLeft ? 0 : labelDistance * (multiple ? (inner.innerData.length / 2 + 1) / (inner.innerData.length + 1) : 2 / 3));
+            var labelDistance = (invertAxis ? maxY - minY : maxX - minX) / (labelCount + (fromFirstLeft ? -1 : (multiple ? 1 / (inner.innerData.length + 1) : 1 / 3)));
+            var startPos = (invertAxis ? minY : minX) + (fromFirstLeft ? 0 : labelDistance * (multiple ? (inner.innerData.length / 2 + 1) / (inner.innerData.length + 1) : 2 / 3));
 
             inner.axisSize = {
                 labelAxisLength: labelAxisLength, valueAxisLength: valueAxisLength, yAxisWidth: yAxisWidth, xAxisHeight: xAxisHeight,
@@ -1874,11 +1877,11 @@ DChart.getCore = function () {
             if (typeof options.valueAxis.content != 'function') { return; }
             var axisData = inner.tempData.axisData;
             var axisSize = inner.axisSize || inner._computeAxis(valids);
-            var upturnAxis = inner.tempData.upturnAxis;
+            var invertAxis = inner.tempData.invertAxis;
             var vTimeType = axisData.vValueType == 'd' || axisData.vValueType == 't';
             var lTimeType = axisData.lValueType == 'd' || axisData.lValueType == 't';
 
-            var vfontsize = options.valueAxis.fontsize || (upturnAxis ? 1.3 : 1) * (axisSize.valueAxisLength - axisSize.valueAxisLineWidth) / (vTimeType ? 9 : 6);
+            var vfontsize = options.valueAxis.fontsize || (invertAxis ? 1.3 : 1) * (axisSize.valueAxisLength - axisSize.valueAxisLineWidth) / (vTimeType ? 9 : 6);
             var vfontweight = (options.valueAxis.fontweight || 'normal');
             var vfontfamily = (options.valueAxis.fontfamily || options.fontFamily || DChart.Const.Defaults.AxisFontFamily);
             var vLabelFontColor = options.valueAxis.fontcolor;
@@ -1902,7 +1905,7 @@ DChart.getCore = function () {
                             }
                             else {
                                 var length0 = i == 0 ? 0 : inner.DrawFigures.measureText(labels[i - 1], fontweight, fontsize, fontfamily);
-                                var distance = upturnAxis ? axisSize.valueAxisLength : axisSize.labelDistance;
+                                var distance = invertAxis ? axisSize.valueAxisLength : axisSize.labelDistance;
                                 if (i > 0 && distance * sinx < fontsize && (length1 + length0 > 2 * distance / cosx)) {
                                     tmpOverlap = true; break;
                                 }
@@ -1920,10 +1923,10 @@ DChart.getCore = function () {
                 var labels = axisData.vLabels;
                 var contentX = axisSize.minX - vLabelStartX;
                 var contentY = axisSize.maxY + (options.cross.show ? axisSize.crossLength : 3) + axisSize.valueAxisLineWidth + 3 + vfontsize;
-                var rotate = formatRotate(options.valueAxis.fontrotate, !upturnAxis, labels, vfontweight, vfontsize, vfontfamily);
+                var rotate = formatRotate(options.valueAxis.fontrotate, !invertAxis, labels, vfontweight, vfontsize, vfontfamily);
                 inner.coordinates.axis.vlabels = [];
                 for (var i = 0; i <= axisData.vScalecount; i++) {
-                    if (upturnAxis) {
+                    if (invertAxis) {
                         var centerX = axisSize.minX + i * axisSize.axisValueCut;
                         var textLength = inner.DrawFigures.createText(labels[i], centerX, contentY, 'center', vfontweight, vfontsize, vfontfamily, vLabelFontColor, rotate, 'right');
                         inner.coordinates.axis.vlabels[i] = { index: i, left: centerX - textLength / 2, right: centerX + textLength / 2, top: contentY - vfontsize, bottom: contentY, fontsize: vfontsize, length: textLength };
@@ -1941,7 +1944,7 @@ DChart.getCore = function () {
                 var linewidth = options.cross.linewidth;
                 var linecolor = options.cross.linecolor || vLineColor;
                 var crossLength = axisSize.crossLength;
-                if (upturnAxis) {
+                if (invertAxis) {
                     var startY = axisSize.maxY + axisSize.valueAxisLineWidth;
                     var endY = axisSize.maxY + axisSize.valueAxisLineWidth + axisSize.crossLength;
                     var linecut = Math.floor((axisSize.scaleLineWidth + 0.1) / 2);
@@ -1964,7 +1967,7 @@ DChart.getCore = function () {
                     inner.DrawFigures.createLine(startX, axisSize.maxY + 1, endX, axisSize.maxY + 1, linewidth, linecolor);
                 }
             }; if (axisSize.valueAxisLineWidth && axisSize.valueAxisLineWidth > 0) {
-                if (upturnAxis) {
+                if (invertAxis) {
                     var y = axisSize.maxY + axisSize.valueAxisLineWidth / 2;
                     inner.DrawFigures.createLine(axisSize.minX - axisSize.labelAxisLineWidth, y, axisSize.maxX + axisSize.valueAxisLength / 20, y, axisSize.valueAxisLineWidth, vLineColor);
                 }
@@ -1979,10 +1982,10 @@ DChart.getCore = function () {
                 var fontweight = options.labelAxis.fontweight || vfontweight;
                 var fontfamily = options.labelAxis.fontfamily || vfontfamily;
                 var fontcolor = options.labelAxis.fontcolor || vLabelFontColor;
-                var rotate = formatRotate(options.labelAxis.fontrotate, upturnAxis, labels, fontweight, fontsize, fontfamily);
+                var rotate = formatRotate(options.labelAxis.fontrotate, invertAxis, labels, fontweight, fontsize, fontfamily);
                 inner.coordinates.axis.llabels = [];
                 for (var i = 0, label; label = labels[i]; i++) {
-                    if (upturnAxis) {
+                    if (invertAxis) {
                         var right = axisSize.minX - axisSize.valueAxisLineWidth - fontsize * (rotate < 0 ? 1 : 0.5);
                         var bottom = axisSize.startPos + (axisSize.labelDistance) * i + fontsize / 2;
                         var textLength = inner.DrawFigures.createText(label, right, bottom, 'right', fontweight, fontsize, fontfamily, fontcolor, rotate);
@@ -1997,7 +2000,7 @@ DChart.getCore = function () {
                 }
             };
             if (axisSize.labelAxisLineWidth && axisSize.labelAxisLineWidth > 0) {
-                if (upturnAxis) {
+                if (invertAxis) {
                     var x = axisSize.minX - axisSize.labelAxisLineWidth / 2;
                     inner.DrawFigures.createLine(x, axisSize.minY - (options.close.show ? axisSize.closeLineWidth : 0), x, axisSize.maxY, axisSize.labelAxisLineWidth, options.labelAxis.linecolor || DChart.Const.Defaults.AxisLineColor);
                 }
@@ -2014,7 +2017,7 @@ DChart.getCore = function () {
                 var fontweight = ops.fontweight || 'bold';
                 var fontfamily = ops.fontfamily || vfontfamily;
                 var centerY = (axisSize.minY + axisSize.maxY) / 2;
-                var right = axisSize.minX - axisSize.yAxisLineWidth - (axisSize.yAxisWidth - axisSize.yAxisLineWidth) * (ops.titlelocation || (upturnAxis ? 0.75 : DChart.Const.Defaults.AxisYTitleLocation[axisData.vValueType]));
+                var right = axisSize.minX - axisSize.yAxisLineWidth - (axisSize.yAxisWidth - axisSize.yAxisLineWidth) * (ops.titlelocation || (invertAxis ? 0.75 : DChart.Const.Defaults.AxisYTitleLocation[axisData.vValueType]));
                 var textlength = inner.DrawFigures.createText(ops.content, right, centerY, 'center', fontweight, fontsize, fontfamily, fontcolor, -0.5);
                 inner.coordinates.axis.yAxisTitle = { top: centerY - textlength / 2, bottom: centerY + textlength / 2, left: right - fontsize, right: right, fontsize: fontsize, length: textlength };
             };
@@ -2025,14 +2028,14 @@ DChart.getCore = function () {
                 var fontweight = options.xAxisTitle.fontweight || 'bold';
                 var fontfamily = options.xAxisTitle.fontfamily || vfontfamily;
                 var centerX = inner.canvas.width / 2;
-                var bottom = axisSize.maxY + axisSize.xAxisLineWidth + (axisSize.xAxisHeight - axisSize.xAxisLineWidth) * (options.xAxisTitle.titlelocation || (upturnAxis ? 0.75 : DChart.Const.Defaults.AxisXTitleLocation[axisData.vValueType]));
+                var bottom = axisSize.maxY + axisSize.xAxisLineWidth + (axisSize.xAxisHeight - axisSize.xAxisLineWidth) * (options.xAxisTitle.titlelocation || (invertAxis ? 0.75 : DChart.Const.Defaults.AxisXTitleLocation[axisData.vValueType]));
                 var textlength = inner.DrawFigures.createText(options.xAxisTitle.content, centerX, bottom, 'center', fontweight, fontsize, fontfamily, fontcolor);
                 inner.coordinates.axis.xAxisTitle = { top: bottom - fontsize, bottom: bottom, left: centerX - textlength / 2, right: centerX + textlength / 2, fontsize: fontsize, length: textlength };
             };
             var drawCaption = function () {
                 if (typeof options.caption.content != 'string') { return; }
                 var size = options.caption.fontsize || (vfontsize + (vTimeType ? 2 : -1));
-                if (upturnAxis) {
+                if (invertAxis) {
                     var centerX = Math.min(axisSize.maxX + size * 2, inner.canvas.width - canvasBorderWidth - size);
                     var centerY = axisSize.maxY + axisSize.xAxisLineWidth / 2;
                     var textlength = inner.DrawFigures.createText(options.caption.content, centerX, centerY, 'center', options.caption.fontweight, size, options.caption.fontfamily, options.caption.fontcolor || vLabelFontColor, 0.5);
@@ -2048,7 +2051,7 @@ DChart.getCore = function () {
             var drawCloseLine = function () {
                 if (!(options.close.show && axisSize.closeLineWidth && axisSize.closeLineWidth > 0)) { return; }
                 var linecolor = options.close.linecolor || options.scale.linecolor || DChart.Const.Defaults.ScaleLineColor;
-                if (upturnAxis) {
+                if (invertAxis) {
                     var closeY = axisSize.minY - axisSize.closeLineWidth / 2;
                     inner.DrawFigures.createLine(axisSize.minX, closeY, axisSize.maxX, closeY, axisSize.closeLineWidth, linecolor);
                 }
@@ -2089,12 +2092,12 @@ DChart.getCore = function () {
             var linecut = Math.floor((scaleLineWidth + 0.1) / 2);
             var scaleLineColor = options.scale.linecolor || DChart.Const.Defaults.ScaleLineColor;
             var scaleBackColors = options.scale.backcolors;
-            var upturnAxis = inner.tempData.upturnAxis;
+            var invertAxis = inner.tempData.invertAxis;
             if (scaleBackColors && scaleBackColors.length == 1) {
                 inner.DrawFigures.createRectangleFill(axisSize.minX, axisSize.minY, axisSize.maxX - axisSize.minX, axisSize.maxY - axisSize.minY, scaleBackColors[0]);
             }
             for (var i = 1; i <= axisData.vScalecount; i++) {
-                if (upturnAxis) {
+                if (invertAxis) {
                     var x = axisSize.maxX - i * axisSize.axisValueCut;
                     if (i == axisData.vScalecount && x < axisSize.minX) { x = axisSize.minX; }
                     if (scaleBackColors && scaleBackColors.length > 1) {
@@ -2123,7 +2126,7 @@ DChart.getCore = function () {
             if (options.scale.drawvertical) {
                 var drawCloseLine = options.close.show && axisSize.closeLineWidth && axisSize.closeLineWidth > 0;
                 for (var i = 1; i < axisData.lScalecount + (drawCloseLine ? 0 : 1) ; i++) {
-                    if (upturnAxis) {
+                    if (invertAxis) {
                     }
                     else {
                         var x = axisSize.startPos + i * axisSize.labelDistance;

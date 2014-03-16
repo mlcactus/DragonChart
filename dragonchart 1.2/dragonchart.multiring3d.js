@@ -86,7 +86,13 @@ DChart.MultiRing3D._drawgraphic = function (inner, graphicID, innerData, options
     var cutX = 3; var cutY = 3;
     var zoomX = options.reflection3d.zoomX || 1.2;
     var zoomY = options.reflection3d.zoomY || 0.9;
+    if (inner._configs._isIE678.isIE678) {
+        zoomX = 1; zoomY = 1;
+    }
     var radiusInfo = inner._computeRadiusForPies(options, zoomX, zoomY);
+    if (inner._configs._isIE678.isIE678) {
+        radiusInfo.maxRadius *= 0.9;
+    }
     var ringCount = innerData[0].value.length;
     var cemicircleCount = innerData.length;
     if (!ringCount || ringCount < 1) {
@@ -145,7 +151,7 @@ DChart.MultiRing3D._drawgraphic = function (inner, graphicID, innerData, options
         };
     };
 
-    var pieshape = function (indexX, indexY, color, darksidecolor, innerRadius, outerRadius, percent, angleMin, angleMax, midAngle, isLeft, isBottom, data) {
+    var pieshape = function (indexX, indexY, color, darksidecolor, innerRadius, outerRadius, percent, angleMin, angleMax, midAngle, data) {
         this.indexX = indexX;
         this.indexY = indexY;
         this.color = color;
@@ -156,8 +162,6 @@ DChart.MultiRing3D._drawgraphic = function (inner, graphicID, innerData, options
         this.angleMin = angleMin;
         this.angleMax = angleMax;
         this.midAngle = midAngle;
-        this.isLeft = isLeft;
-        this.isBottom = isBottom;
         this.isHovered = false;
         this.data = data;
         this.redraw = function (color) {
@@ -344,9 +348,10 @@ DChart.MultiRing3D._drawgraphic = function (inner, graphicID, innerData, options
                 if (ops.backcolor) {
                     inner.DrawFigures.createRectangleFill(shape.left, shape.top, shape.width, shape.height, ops.backcolor);
                 }
+                var fontsize = ops.fontsize || (shape.length - 1);
                 var left = shape.left + (shape.floatright ? cutX + (ops.withlegend ? shape.length + cutX : 0) : shape.width - cutX);
-                var top = shape.top + shape.length + cutY / 2;
-                inner.DrawFigures.createText(shape.content, left, top, shape.floatright ? 'left' : 'right', null, ops.fontsize || (shape.length - 1), ops.fontfamily, ops.color);
+                var top = shape.top + shape.length / 2 + fontsize / 2 + cutY / 2;
+                inner.DrawFigures.createText(shape.content, left, top, shape.floatright ? 'left' : 'right', null, fontsize, ops.fontfamily, ops.color);
                 if (ops.borderwidth && ops.borderwidth > 0) {
                     inner.DrawFigures.createRectangleBorder(shape.left, shape.top, shape.width, shape.height, ops.borderwidth, ops.bordercolor);
                 }
@@ -376,7 +381,7 @@ DChart.MultiRing3D._drawgraphic = function (inner, graphicID, innerData, options
         var usedRadius = radius;
         var complete = percentAnimComplete >= 1;
         var drawReflection = function (shapeitem, type) {
-            drawPart(shapeitem.indexX, type, shapeitem.color, shapeitem.innerRadius, shapeitem.outerRadius, shapeitem.angleMin, shapeitem.angleMax, shapeitem.darksidecolor, false, complete && shapeitem.indexX == 0 && type == 3, shapeitem.data, shapeitem);
+            drawPart(shapeitem.indexX, type, shapeitem.color, shapeitem.innerRadius * scaleAnimation, shapeitem.outerRadius * scaleAnimation, shapeitem.angleMin, shapeitem.angleMax, shapeitem.darksidecolor, false, complete && shapeitem.indexX == 0 && type == 3, shapeitem.data, shapeitem);
         };
         var pieshapes = [];
         for (var k = 0; k < ringCount; k++) {
@@ -395,14 +400,13 @@ DChart.MultiRing3D._drawgraphic = function (inner, graphicID, innerData, options
                 var angleMin = cumulativeAngle;
                 var angleMax = cumulativeAngle + rotate;
                 var midAngle = (angleMin + angleMax) / 2;
-                var isLeft = DChart.Methods.JudgeBetweenAngle(-Math.PI * 0.5, Math.PI * 0.5, midAngle);
-                var isBottom = DChart.Methods.JudgeBetweenAngle(angleMin, angleMax, Math.PI / 2);
                 var data = null;
                 if (complete) {
                     data = { index: index, color: color, darksidecolor: item.darksidecolor, percent: percent, value: tmpVal, text: item.text, label: label, click: item.click, mouseover: item.mouseover, mouseleave: item.mouseleave, fontsize: item.fontsize, fontcolor: item.fontcolor, fontweight: item.fontweight };
                     inner.coordinates.multiRing[graphicID].cemicircles.push({ index: index, percent: percent, angleMin: angleMin, angleMax: angleMax, innerRadius: innerRadius, outerRadius: outerRadius });
                 }
-                var _pieshape = new pieshape(k, i, color, item.darksidecolor, innerRadius, outerRadius, percent, angleMin, angleMax, midAngle, isLeft, isBottom, data);
+                var _pieshape = new pieshape(k, i, color, item.darksidecolor, innerRadius, outerRadius, percent, angleMin, angleMax, midAngle, data);
+                inner._methodsFor3D.computeLoc(_pieshape);
                 pieshapes.push(_pieshape);
                 cumulativeAngle += rotate;
             }
@@ -415,24 +419,12 @@ DChart.MultiRing3D._drawgraphic = function (inner, graphicID, innerData, options
                 return 1;
             }
             else {
-                if (shapeitem0.isBottom && shapeitem0.indexX == 0) { return 1; }
-                else if (shapeitem1.isBottom && shapeitem1.indexX == 0) { return -1; }
-                if (shapeitem0.isBottom && shapeitem0.indexX == ringCount - 1) { return -1; }
-                else if (shapeitem1.isBottom && shapeitem1.indexX == ringCount - 1) { return 1; }
+                if (shapeitem0.indexX == shapeitem1.indexX) {
+                    return inner._methodsFor3D.pieshapeSort(shapeitem0, shapeitem1);
+                }
                 else {
-                    if (shapeitem0.indexX == shapeitem1.indexX) {
-                        if (shapeitem0.isLeft == shapeitem1.isLeft) {
-                            if (shapeitem0.isLeft) { return shapeitem0.midAngle < shapeitem1.midAngle ? -1 : 1; }
-                            else { return shapeitem0.midAngle < shapeitem1.midAngle ? 1 : -1; }
-                        }
-                        else {
-                            if (shapeitem0.isLeft) { return -1; }
-                            else { return 1; }
-                        }
-                    }
-                    else {
-                        if (shapeitem0.indexX == 0) { return -1; }
-                    }
+                    if (shapeitem0.indexX == 0) { return -1; }
+                    else { return 1; }
                 }
             }
         });

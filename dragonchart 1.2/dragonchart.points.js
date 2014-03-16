@@ -16,7 +16,7 @@ DChart.Points._spreadSkin = function (newOps, skin) {
 };
 DChart.Points._getDefaultOptions = function (originalCommonOptions) {
     var options = DChart.Methods.Extend(originalCommonOptions, {
-        upturnAxis: false,
+        invertAxis: false,
         labelAxis: {
             valueType: null,
             content: function (val) {
@@ -71,8 +71,8 @@ DChart.Points._getDefaultOptions = function (originalCommonOptions) {
 };
 DChart.Points._getCheckOptions = function () {
     return {
-        __top: [['upturnAxis', 'b']],
-        labelAxis: [['valueType', 's'], ['content', 'f'], ['minvalue', 'n'], ['maxvalue', 'n'], ['interval', 'n'], ['sort', 'b']],
+        __top: [['invertAxis', 'b']],
+        labelAxis: [['valueType', 's'], ['content', 'f'], ['interval', 'n'], ['sort', 'b']],
         node: [['colors', 'ca'], ['nodetype', 's'], ['linecolor', 'c'], ['linewidth', 'n'], ['length', 'n'], ['fillcolor', 'c']],
         tip: [['merge', 'b'], ['spotdistance', 'n']],
         alignline: [['verticalline', 'b'], ['horizontalline', 'b'], ['linecolor', 'c']],
@@ -81,10 +81,10 @@ DChart.Points._getCheckOptions = function () {
 };
 DChart.Points._drawgraphic = function (inner, graphicID, innerData, options) {
     inner._configs.recreateAssists = true;
-    var upturnAxis = options.upturnAxis;
+    var invertAxis = options.invertAxis;
     var lineIsMain = graphicID == inner.ID;
     if (lineIsMain) {
-        inner._configs.upturnAxis = upturnAxis;
+        inner._configs.invertAxis = invertAxis;
         if (options.labelAxis.valueType == 'p') {
             throw new Error(inner._messages.WrongParam + inner._messages.LabelAxisValueTypeCannotBePercent);
         }
@@ -111,9 +111,9 @@ DChart.Points._drawgraphic = function (inner, graphicID, innerData, options) {
     }
     var specificConfig = inner._configs.specificConfig[graphicID];
     var pointsPosition = inner._configs.pointsPosition;
-    var mergeTips = [];
-    var valueAxisLength = (upturnAxis ? axisSize.maxX - axisSize.minX : axisSize.maxY - axisSize.minY);
-    var labelAxisLength = (upturnAxis ? axisSize.maxY - axisSize.minY : axisSize.maxX - axisSize.minX);
+    specificConfig.mergeTips = [];
+    var valueAxisLength = (invertAxis ? axisSize.maxX - axisSize.minX : axisSize.maxY - axisSize.minY);
+    var labelAxisLength = (invertAxis ? axisSize.maxY - axisSize.minY : axisSize.maxX - axisSize.minX);
     var nodelength = options.node.length || DChart.Methods.CapValue(labelAxisLength / 100, 10, 6);
     var nodeShape = function (index, centerX, centerY, length, data, color) {
         this.index = index;
@@ -200,15 +200,16 @@ DChart.Points._drawgraphic = function (inner, graphicID, innerData, options) {
                     lvalue = lValueType ? subitem[0] : k;
                     vvalue = lValueType ? subitem[1] : subitem;
                     vpercent = percentType ? dataitem.percent[k] : null;
-                    center2 = upturnAxis ? axisSize.minX + getValueHeight(percentType ? vpercent : vvalue) : axisSize.maxY - getValueHeight(percentType ? vpercent : vvalue);
+                    center2 = invertAxis ? axisSize.minX + getValueHeight(percentType ? vpercent : vvalue) : axisSize.maxY - getValueHeight(percentType ? vpercent : vvalue);
                     if (pointsPosition) {
-                        center1 = pointsPosition[i] + pointsPosition.labelDistance * k;
+                        center1 = pointsPosition[i] + (invertAxis ? -pointsPosition.labelDistance * k : pointsPosition.labelDistance * k);
                     }
                     else {
-                        center1 = (upturnAxis ? axisSize.minY : axisSize.minX) + getLabelWidth(lvalue);
+                        center1 = (invertAxis ? axisSize.maxY - getLabelWidth(lvalue) : axisSize.minX + getLabelWidth(lvalue));
                     }
-                    drawnode(upturnAxis ? center2 : center1, upturnAxis ? center1 : center2, color, dataitem);
-                    addPointsShape(i, k, upturnAxis ? center2 : center1, upturnAxis ? center1 : center2, dataitem.nodelength || nodelength, color, vvalue, lvalue, text, vpercent, dataitem);
+
+                    drawnode(invertAxis ? center2 : center1, invertAxis ? center1 : center2, color, dataitem);
+                    addPointsShape(i, k, invertAxis ? center2 : center1, invertAxis ? center1 : center2, dataitem.nodelength || nodelength, color, vvalue, lvalue, text, vpercent, dataitem);
                 }
             }
         }
@@ -220,10 +221,10 @@ DChart.Points._drawgraphic = function (inner, graphicID, innerData, options) {
                 lvalue = lValueType ? subitem.value[0] : i;
                 vvalue = lValueType ? subitem.value[1] : subitem.value;
                 vpercent = percentType ? innerData[i].percent : null;
-                center1 = (lineIsMain ? (upturnAxis ? axisSize.minY : axisSize.minX) : axisSize.startPos) + getLabelWidth(lvalue);
-                center2 = upturnAxis ? axisSize.minX + getValueHeight(percentType ? vpercent : vvalue) : axisSize.maxY - getValueHeight(percentType ? vpercent : vvalue);
-                drawnode(upturnAxis ? center2 : center1, upturnAxis ? center1 : center2, color, subitem);
-                addPointsShape(-1, i, upturnAxis ? center2 : center1, upturnAxis ? center1 : center2, subitem.nodelength || nodelength, color, vvalue, lvalue, text, vpercent, subitem);
+                center1 = lineIsMain ? (invertAxis ? axisSize.maxY - getLabelWidth(lvalue) : axisSize.minX + getLabelWidth(lvalue)) : axisSize.startPos + (invertAxis ? -getLabelWidth(lvalue) : getLabelWidth(lvalue));
+                center2 = invertAxis ? axisSize.minX + getValueHeight(percentType ? vpercent : vvalue) : axisSize.maxY - getValueHeight(percentType ? vpercent : vvalue);
+                drawnode(invertAxis ? center2 : center1, invertAxis ? center1 : center2, color, subitem);
+                addPointsShape(-1, i, invertAxis ? center2 : center1, invertAxis ? center1 : center2, subitem.nodelength || nodelength, color, vvalue, lvalue, text, vpercent, subitem);
             }
         }
     };
@@ -244,14 +245,21 @@ DChart.Points._drawgraphic = function (inner, graphicID, innerData, options) {
             if (y <= axisSize.maxY && y >= axisSize.minY && x >= axisSize.minX && x <= axisSize.maxX) {
                 var index = -1;
                 var cut = labelAxisLength / (axisData.tuftCount - 1);
-                var startDistance = (upturnAxis ? axisSize.minY : axisSize.minX);
-                var referPos = (upturnAxis ? y : x);
+                var startDistance = (invertAxis ? axisSize.maxY : axisSize.minX);
+                var referPos = (invertAxis ? y : x);
                 for (var i = 1; i < axisData.tuftCount; i++) {
-                    var x1 = startDistance + (i - 1) * cut;
-                    var x2 = startDistance + i * cut;
+                    var x1 = startDistance + (invertAxis ? -i * cut : (i - 1) * cut);
+                    var x2 = startDistance + (invertAxis ? -(i - 1) * cut : i * cut);
                     if (x1 <= referPos && x2 >= referPos) {
-                        if (Math.abs(x1 - referPos) < spotdistance) { index = i - 1; loc = x1; }
-                        else if (Math.abs(x2 - referPos) < spotdistance) { index = i; loc = x2; }
+                        var distance1 = Math.abs(x1 - referPos);
+                        var distance2 = Math.abs(x2 - referPos);
+                        if (distance1 < spotdistance && distance1 <= distance2) {
+                            index = invertAxis ? i : i - 1; loc = x1;
+                        }
+                        else if (distance2 < spotdistance && distance2 <= distance1) {
+                            index = invertAxis ? i - 1 : i;
+                            loc = x2;
+                        }
                         break;
                     }
                 }
@@ -294,18 +302,16 @@ DChart.Points._drawgraphic = function (inner, graphicID, innerData, options) {
                 }
                 if (veryShape) {
                     veryShape.isHovered = true;
-                    if (showByNode) {
-                        if (options.alignline.verticalline || options.alignline.horizontalline) {
-                            inner.redrawAll();
-                        }
-                        if (options.alignline.verticalline) {
-                            inner.DrawFigures.createLine(veryShape.centerX, axisSize.minY, veryShape.centerX, axisSize.maxY + 1, 1, alignlinecolor);
-                        }
-                        if (options.alignline.horizontalline) {
-                            inner.DrawFigures.createLine(axisSize.minX, veryShape.centerY, axisSize.maxX, veryShape.centerY, 1, alignlinecolor);
-                        }
-                        if (veryShape.showTip && showByNode) { veryShape.showTip(); }
+                    if (options.alignline.verticalline || options.alignline.horizontalline) {
+                        inner.redrawAll();
                     }
+                    if (options.alignline.verticalline) {
+                        inner.DrawFigures.createLine(veryShape.centerX, axisSize.minY, veryShape.centerX, axisSize.maxY + 1, 1, alignlinecolor);
+                    }
+                    if (options.alignline.horizontalline) {
+                        inner.DrawFigures.createLine(axisSize.minX, veryShape.centerY, axisSize.maxX, veryShape.centerY, 1, alignlinecolor);
+                    }
+                    if (veryShape.showTip && showByNode) { veryShape.showTip(); }
                     var mouseover = typeof veryShape.data.mouseover == 'function' ? veryShape.data.mouseover : (options.mouseover || null);
                     if (mouseover) {
                         mouseover(veryShape.data, e);
@@ -322,9 +328,9 @@ DChart.Points._drawgraphic = function (inner, graphicID, innerData, options) {
                 if (inner.loc != fixed.loc) {
                     inner.loc = fixed.loc;
                     if (options.tip.merge) {
-                        for (var i = 0; i < mergeTips.length; i++) {
-                            if (mergeTips[i]) {
-                                mergeTips[i].style.display = 'none';
+                        for (var i = 0; i < specificConfig.mergeTips.length; i++) {
+                            if (specificConfig.mergeTips[i]) {
+                                specificConfig.mergeTips[i].style.display = 'none';
                             }
                         }
                     }
@@ -333,19 +339,19 @@ DChart.Points._drawgraphic = function (inner, graphicID, innerData, options) {
                             if (shape.hideTip) { shape.hideTip(); }
                         }
                     }
-                    if (upturnAxis && options.alignline.horizontalline || !upturnAxis && options.alignline.verticalline) {
+                    if (invertAxis && options.alignline.horizontalline || !invertAxis && options.alignline.verticalline) {
                         inner.redrawAll();
                     }
                     if (fixed.shapes.length) {
-                        if (!upturnAxis && options.alignline.verticalline) {
+                        if (!invertAxis && options.alignline.verticalline) {
                             inner.DrawFigures.createLine(fixed.loc, axisSize.minY, fixed.loc, axisSize.maxY + 1, 1, alignlinecolor);
                         }
-                        if (upturnAxis && options.alignline.horizontalline) {
+                        if (invertAxis && options.alignline.horizontalline) {
                             inner.DrawFigures.createLine(axisSize.minX, fixed.loc, axisSize.maxX, fixed.loc, 1, alignlinecolor);
                         }
                         if (options.tip.merge) {
                             if (fixed.shapes[0].showTip) {
-                                var mergeTip = mergeTips[fixed.shapes[0].index];
+                                var mergeTip = specificConfig.mergeTips[fixed.shapes[0].index];
                                 if (!mergeTip) {
                                     var data = [];
                                     var centerXSum = 0; var centerYSum = 0;
@@ -354,14 +360,14 @@ DChart.Points._drawgraphic = function (inner, graphicID, innerData, options) {
                                         centerYSum += shape.centerY;
                                         centerXSum += shape.centerX;
                                     }
-                                    var centerX = centerXSum / fixed.shapes.length;
+                                    var centerX = centerXSum / fixed.shapes.length + 5;
                                     var centerY = centerYSum / fixed.shapes.length;
                                     mergeTip = inner._createTip(options.tip.content.call(options, data, true), centerX, centerY);
                                     inner._changeTip(mergeTip, null, centerY - mergeTip.clientHeight / 2 + 10);
                                     if (centerX + mergeTip.clientWidth > axisSize.maxX) {
                                         inner._changeTip(mergeTip, centerX - 5 - nodelength - mergeTip.clientWidth);
                                     }
-                                    mergeTips[fixed.shapes[0].index] = mergeTip;
+                                    specificConfig.mergeTips[fixed.shapes[0].index] = mergeTip;
                                 }
                                 mergeTip.style.display = 'inline';
                             }

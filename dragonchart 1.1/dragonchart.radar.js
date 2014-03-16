@@ -90,7 +90,7 @@ DChart.Radar = DChart.getCore().__extends({
         var linecolors = (options.radar.linecolors && options.radar.linecolors.length > 0 ? options.radar.linecolors : null) || DChart.Const.Defaults.FillColors;
         var nodefillcolors = (options.radar.nodefillcolors && options.radar.nodefillcolors.length > 0 ? options.radar.nodefillcolors : null) || linecolors;
         var nodelinecolors = (options.radar.nodelinecolors && options.radar.nodelinecolors.length > 0 ? options.radar.nodelinecolors : null) || nodefillcolors;
-        inner.tempData.legendColors = linecolors;
+        inner.tempData.legendColors = fillcolors;
 
         var labelfontcolors = options.labels.fontcolors && options.labels.fontcolors.length > 0 ? options.labels.fontcolors : null;
 
@@ -196,7 +196,7 @@ DChart.Radar = DChart.getCore().__extends({
                 }
             }
             var labelfontsize = opsLabels.fontsize || radarRadius / 8;
-            var linecolor = opsScale.linecolor || 'rgb(190,190,190)';
+            var linecolor = opsScale.linecolor || options.lineColor || 'rgb(190,190,190)';
             var little = 0.1;
             var cut = 5;
             for (var k = 0; k < dataLength; k++) {

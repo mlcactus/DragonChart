@@ -49,7 +49,7 @@ DChart.Bar = DChart.getCore().__extends({
         if (!options.animateY && !options.animateX) { options.animation = false; }
         inner.SetData(_data);
         inner._onStart();
-        inner.tempData.upturnAxis = true;
+        inner.tempData.invertAxis = true;
         inner.tempData.notAllowValueNegative = true;
         inner.shapes.bars = [];
         var axisData = inner._formatAxisData();

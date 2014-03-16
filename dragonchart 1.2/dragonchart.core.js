@@ -7,13 +7,7 @@
 Date.prototype.format = function (fmt) {
     var o =
     {
-        "M+": this.getMonth() + 1,
-        "d+": this.getDate(),
-        "h+": this.getHours(),
-        "m+": this.getMinutes(),
-        "s+": this.getSeconds(),
-        "q+": Math.floor((this.getMonth() + 3) / 3),
-        "S": this.getMilliseconds()
+        "M+": this.getMonth() + 1, "d+": this.getDate(), "h+": this.getHours(), "m+": this.getMinutes(), "s+": this.getSeconds(), "q+": Math.floor((this.getMonth() + 3) / 3), "S": this.getMilliseconds()
     };
     if (/(y+)/.test(fmt)) {
         fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
@@ -67,6 +61,13 @@ Array.prototype.__multiply = function (param) {
         this[i] = this[i] * param;
     }
 };
+Array.prototype.__sum = function () {
+    var res = 0;
+    for (var i = 0; i < this.length; i++) {
+        res += this[i];
+    }
+    return res;
+};
 Array.prototype.__contains = function (val) {
     var contain = false;
     for (var i = 0; i < this.length; i++) {
@@ -86,7 +87,10 @@ Array.prototype.__only = function (val) {
 window.DChart = {};
 DChart.Methods = {
     JudgeNormalObject: function (obj) {
-        return obj && typeof obj == 'object' && !DChart.Methods.IsArray(obj);
+        return obj && typeof obj == 'object' && !DChart.Methods.IsArray(obj) && !DChart.Methods.IsDate(obj);
+    },
+    StringIsDate: function (str) {
+        return !isNaN(Date.parse(str.replace(/-/g, '/')));
     },
     DeepCopy: function (oldops) {
         var result = {};
@@ -159,8 +163,8 @@ DChart.Methods = {
         if (DChart.Methods.IsNumber(minValue) && valueToCap < minValue) { return minValue; }
         return valueToCap;
     },
-    GetRandomString: function () {
-        return Math.random().toString().substring(2);
+    GetRandomString: function (subindex) {
+        return Math.random().toString().substring(5);
     },
     GetCurrentAngle: function (x, y, locX, locY) {
         var angle = Math.asin((y - locY) / Math.sqrt(Math.pow(x - locX, 2) + Math.pow(y - locY, 2)));
@@ -191,6 +195,22 @@ DChart.Methods = {
             }
         }
         return right;
+    },
+    judgeClockwiseBehind: function (min, max, r1, r2) {
+        min = min * Math.PI;
+        max = max * Math.PI;
+        var format = function (r) {
+            while (r < min) {
+                r += 2 * Math.PI;
+            }
+            while (r > max) {
+                r -= 2 * Math.PI;
+            }
+            return r;
+        };
+        r1 = format(r1);
+        r2 = format(r2);
+        return r1 < r2;
     },
     CopyInnerValue: function (valueType, value) {
         if (valueType == 'd' || valueType == 't') {
@@ -283,6 +303,12 @@ DChart.Methods = {
         else {
             return { X: loc.X / zoomX, Y: loc.Y / zoomY };
         }
+    },
+    judgeIE678: function () {
+        var isIE678 = !!window.ActiveXObject && !document.createElement('canvas').getContext;
+        var isIE67 = isIE678 && (navigator.userAgent.indexOf("MSIE 6.0") > 0 || navigator.userAgent.indexOf("MSIE 7.0") > 0);
+        var isIE8 = isIE678 && navigator.userAgent.indexOf("MSIE 8.0") > 0;
+        return { isIE678: isIE678, isIE67: isIE67, isIE8: isIE8 };
     }
 };
 
@@ -315,6 +341,7 @@ DChart.Const = {
             ValueTypeMustBeNumberOrPercent: '值轴的数据类型必须为n或p。',
             ValueTypeMustNotBePercent: '值轴的数据类型不能为p。',
             AxisVauleShouldBeDArray: '数据必须为二维数组（第一个元素为文本轴值，第二个元素为值轴值）。',
+            ValueAxisValueShouldBeDArray: '值轴数据必须为二位数组（第一个元素为较小值，第二个元素为较大值）。',
             DataMustGreaterThanZero: '数据必须为不小于零的数字。',
             SubItemsValueShouldEqualSuperValue: '子节点值的总和应该等于上级母节点的值。',
             DataMustBeMultipleArray: '数据必须为多维数组。',
@@ -323,6 +350,7 @@ DChart.Const = {
             OptionShouldBeString: '选项值必须为字符串格式。',
             OptionShouldBeBoolean: '选项值必须为布尔格式。',
             OptionShouldBeNumber: '选项值必须为数字格式。',
+            OptionShouldBeDate: '选项值必须为日期格式。',
             OptionShouldBeColorStr: '选项值必须为颜色格式的字符串。',
             OptionShouldBeFunction: '选项值必须为一个function。',
             OptionShouldBeColorArray: '选项值必须为由颜色字符串组成的数组。',
@@ -359,7 +387,8 @@ DChart.Const = {
             LabelDistanceExceedMax: 'label distance should not be negative and the sum of label distance should be less than the max length.',
             ValueTypeMustBeNumberOrPercent: 'The valueType of value-axis must be n or p.',
             ValueTypeMustNotBePercent: 'The valueType of value-axis cannot be percent.',
-            AxisVauleShouldBeDArray: 'Data must be double-array（first value for label axis，second for value axis）',
+            AxisVauleShouldBeDArray: 'Data must be double-array(first value for label axis，second for value axis).',
+            ValueAxisValueShouldBeDArray: 'Data of value axis must be double-array(first value for smaller value，second for bigger value).',
             DataMustGreaterThanZero: 'Data must not be less than zero.',
             SubItemsValueShouldEqualSuperValue: 'The sum of value of subitems should equal the value of mother node.',
             DataMustBeMultipleArray: 'Data must be multiple array.',
@@ -368,6 +397,7 @@ DChart.Const = {
             OptionShouldBeString: 'Option value should be a string.',
             OptionShouldBeBoolean: 'Option value should be a boolean.',
             OptionShouldBeNumber: 'Option value should be a number.',
+            OptionShouldBeDate: 'Option value should be a date.',
             OptionShouldBeColorStr: 'Option value should be a string array.',
             OptionShouldBeFunction: 'Option value should be a function.',
             OptionShouldBeColorArray: 'Option value should be a color array.',
@@ -386,6 +416,14 @@ DChart.Const = {
         tip_purple: '{box-shadow: 0px 0px 4px rgb(102, 102, 102); border: 2px solid rgb(138,43,226); border-radius: 5px 5px 5px 5px; position: absolute; z-index: 999; text-align: left; padding: 4px 5px; cursor: default; background-color: rgba(239, 239, 239, 0.85); font-size: 12px; color: rgb(138,43,226); opacity: 1; transition: opacity 0.3s ease-out 0s, top 0.1s ease-out 0s, left 0.1s ease-out 0s; top: 245.66px; left: 308.333px; visibility: visible;}',
         tip_yellow: '{box-shadow: 0px 0px 4px rgb(102, 102, 102); border: 2px solid rgb(255,128,0); border-radius: 5px 5px 5px 5px; position: absolute; z-index: 999; text-align: left; padding: 4px 5px; cursor: default; background-color: rgba(239, 239, 239, 0.85); font-size: 12px; color: rgb(255,128,0); opacity: 1; transition: opacity 0.3s ease-out 0s, top 0.1s ease-out 0s, left 0.1s ease-out 0s; top: 245.66px; left: 308.333px; visibility: visible;}',
         tip_bisque: '{box-shadow: 0px 0px 4px rgb(102, 102, 102); border: 2px solid #BEBEBE; border-radius: 5px 5px 5px 5px; position: absolute; z-index: 999; text-align: left; padding: 4px 5px; cursor: default; background-color: rgba(239, 239, 239, 0.85); font-size: 12px; color: rgb(190,190,190);; opacity: 1; transition: opacity 0.3s ease-out 0s, top 0.1s ease-out 0s, left 0.1s ease-out 0s; top: 245.66px; left: 308.333px; visibility: visible;}'
+    },
+    CustomCss_IE678: {
+        tip_blue: '{box-shadow: 0px 0px 4px rgb(102, 102, 102); border: 2px solid rgb(13, 142, 207); border-radius: 5px 5px 5px 5px; position: absolute; z-index: 999; text-align: left; padding: 4px 5px; cursor: default; background-color: #efefef; font-size: 12px; color: rgb(13, 142, 207); opacity: 1; transition: opacity 0.3s ease-out 0s, top 0.1s ease-out 0s, left 0.1s ease-out 0s; top: 245.66px; left: 308.333px; visibility: visible;}',
+        tip_red: '{box-shadow: 0px 0px 4px rgb(102, 102, 102); border: 2px solid rgb(176, 23,  31); border-radius: 5px 5px 5px 5px; position: absolute; z-index: 999; text-align: left; padding: 4px 5px; cursor: default; background-color: #efefef; font-size: 12px; color: rgb(176, 23,  31); opacity: 1; transition: opacity 0.3s ease-out 0s, top 0.1s ease-out 0s, left 0.1s ease-out 0s; top: 245.66px; left: 308.333px; visibility: visible;}',
+        tip_dark: '{box-shadow: 0px 0px 4px rgb(102, 102, 102); border: 2px solid rgb(79 , 79, 79  ); border-radius: 5px 5px 5px 5px; position: absolute; z-index: 999; text-align: left; padding: 4px 5px; cursor: default; background-color: #efefef; font-size: 12px; color: rgb(79 , 79, 79  ); opacity: 1; transition: opacity 0.3s ease-out 0s, top 0.1s ease-out 0s, left 0.1s ease-out 0s; top: 245.66px; left: 308.333px; visibility: visible;}',
+        tip_purple: '{box-shadow: 0px 0px 4px rgb(102, 102, 102); border: 2px solid rgb(138,43,226); border-radius: 5px 5px 5px 5px; position: absolute; z-index: 999; text-align: left; padding: 4px 5px; cursor: default; background-color: #efefef; font-size: 12px; color: rgb(138,43,226); opacity: 1; transition: opacity 0.3s ease-out 0s, top 0.1s ease-out 0s, left 0.1s ease-out 0s; top: 245.66px; left: 308.333px; visibility: visible;}',
+        tip_yellow: '{box-shadow: 0px 0px 4px rgb(102, 102, 102); border: 2px solid rgb(255,128,0); border-radius: 5px 5px 5px 5px; position: absolute; z-index: 999; text-align: left; padding: 4px 5px; cursor: default; background-color: #efefef; font-size: 12px; color: rgb(255,128,0); opacity: 1; transition: opacity 0.3s ease-out 0s, top 0.1s ease-out 0s, left 0.1s ease-out 0s; top: 245.66px; left: 308.333px; visibility: visible;}',
+        tip_bisque: '{box-shadow: 0px 0px 4px rgb(102, 102, 102); border: 2px solid #BEBEBE; border-radius: 5px 5px 5px 5px; position: absolute; z-index: 999; text-align: left; padding: 4px 5px; cursor: default; background-color: #efefef; font-size: 12px; color: rgb(190,190,190);; opacity: 1; transition: opacity 0.3s ease-out 0s, top 0.1s ease-out 0s, left 0.1s ease-out 0s; top: 245.66px; left: 308.333px; visibility: visible;}'
     },
     AnimationAlgorithms: {
         linear: function (t) {
@@ -660,6 +698,8 @@ DChart.getCore = function () {
         inner.ChangeLanguage(_language);
         inner._initial = function () {
             inner._configs = {};
+            inner._configs._isIE678 = DChart.Methods.judgeIE678();
+            inner._configs.basicoptions = { Off: 0, OffLeft: null, OffRight: null, OffTop: null, OffBottom: null, Width: null, Height: null };
 
             inner.onStart = null;
             inner.onBeforeAnimation = null;
@@ -694,6 +734,9 @@ DChart.getCore = function () {
                 if (targetdiv.clientHeight == 0) {
                     targetdiv.style.height = (targetdiv.clientWidth / 2).toString() + "px";
                 }
+                targetdiv.style.position = 'relative';
+                targetdiv.style.left = '0px';
+                targetdiv.style.top = '0px';
                 targetdiv.style.padding = '';
             }
             inner.parentdiv = targetdiv;
@@ -706,14 +749,15 @@ DChart.getCore = function () {
                 }
             }
             var style = document.createElement('style');
+            style.id = 'dragonchart_style_';
             head.appendChild(style);
             inner._configs.classes = {};
-            var classes = DChart.Const.CustomCss;
-            for (var className in classes) {
-                if (classes.hasOwnProperty(className)) {
-                    var newClassName = className + DChart.Methods.GetRandomString();
-                    inner._configs.classes[className] = newClassName;
-                    var css = '.' + newClassName + classes[className] + '\n';
+            var classes = inner._configs._isIE678.isIE678 ? DChart.Const.CustomCss_IE678 : DChart.Const.CustomCss;
+            for (var classname in classes) {
+                if (classes.hasOwnProperty(classname)) {
+                    var newClassName = classname + DChart.Methods.GetRandomString();
+                    inner._configs.classes[classname] = newClassName;
+                    var css = '.' + newClassName + classes[classname] + '\n';
                     if (style.styleSheet) {
                         style.styleSheet.cssText += css;
                     }
@@ -750,7 +794,6 @@ DChart.getCore = function () {
                     break;
                 }
             }
-            inner._configs.basicoptions = { Off: 0, OffLeft: null, OffRight: null, OffTop: null, OffBottom: null, Width: null, Height: null };
             var calculatedBasic = inner._computeBasic();
             var canvas = document.createElement('canvas');
             canvas.setAttribute('id', inner.ID);
@@ -759,6 +802,9 @@ DChart.getCore = function () {
             style = 'margin:' + calculatedBasic.offtop + 'px ' + calculatedBasic.offright + 'px ' + calculatedBasic.offbottom + 'px ' + calculatedBasic.offleft + 'px;';
             canvas.innerHTML = '<p>' + inner._messages.NotSupportHtml5 + '</p>';
             canvas.setAttribute('style', style);
+            if (inner._configs._isIE678.isIE678) {
+                canvas = window.G_vmlCanvasManager.initElement(canvas);
+            }
             inner.parentdiv.appendChild(canvas);
             inner.canvas = canvas;
             inner.ctx = canvas.getContext('2d');
@@ -782,7 +828,15 @@ DChart.getCore = function () {
             return inner;
         };
         inner._addEventListener = function (type, func) {
-            inner.canvas.addEventListener(type, func);
+            if (!inner.innerOptions.supportMouseEvents) {
+                return;
+            }
+            if (inner._configs._isIE678.isIE678) {
+                inner.canvas.attachEvent('on' + type, func);
+            }
+            else {
+                inner.canvas.addEventListener(type, func);
+            }
             inner._configs.eventlisteners[type].push(func);
         };
         inner.ClearBackGround = function () {
@@ -796,11 +850,22 @@ DChart.getCore = function () {
                 }
             }
             for (var i = 0, eventlistener; eventlistener = inner._configs.eventlisteners.click[i]; i++) {
-                inner.canvas.removeEventListener('click', eventlistener, false);
+                if (inner._configs._isIE678.isIE678) {
+                    inner.canvas.detachEvent('onclick', eventlistener);
+                }
+                else {
+                    inner.canvas.removeEventListener('click', eventlistener, false);
+                }
             }
             inner._configs.eventlisteners.click.length = 0;
             for (var i = 0, eventlistener; eventlistener = inner._configs.eventlisteners.mousemove[i]; i++) {
-                inner.canvas.removeEventListener('mousemove', eventlistener, false);
+                if (inner._configs._isIE678.isIE678) {
+                    inner.canvas.detachEvent('onmousemove', eventlistener);
+                }
+                else {
+                    inner.canvas.removeEventListener('mousemove', eventlistener, false);
+                }
+
             }
             inner._configs.eventlisteners.mousemove.length = 0;
             inner.canvas.style.cursor = 'auto';
@@ -814,7 +879,7 @@ DChart.getCore = function () {
             if (inner._configs.originalCommonOptions) { return; }
             inner._configs.originalCommonOptions = {
                 valueType: null,
-                animation: true,
+                animation: !inner._configs._isIE678.isIE678,
                 animationSteps: 100,
                 animationEasing: 'easeInOutQuart',
                 scaleOverlay: false,
@@ -848,7 +913,7 @@ DChart.getCore = function () {
                 legend: {
                     show: true,
                     enablecontrol: false,
-                    linethrouth: true,
+                    strikethrough: true,
                     type: null,
                     elementtype: null,
                     placeX: null,
@@ -1146,12 +1211,19 @@ DChart.getCore = function () {
                 var throwErr = function (errName) {
                     throw new Error(inner._messages.WrongParam + name + inner._messages[errName]);
                 };
-                if (val === null) { return; }
+                if (val === null) { return null; }
                 else if (val === undefined) { throwErr('OptionShouldNotBeUndefined'); }
                 var returnval = null;
                 switch (type) {
                     case 's':
                         if (typeof val != 'string') { throwErr('OptionShouldBeString'); }
+                        break;
+                    case 'd':
+                    case 't':
+                        var valIsDate = DChart.Methods.IsDate(val);
+                        var valIsDateString = typeof val == 'string' && DChart.Methods.StringIsDate(val);
+                        if (!valIsDate && !valIsDateString) { throwErr('OptionShouldBeDate'); }
+                        if (valIsDateString) { returnval = DChart.Methods.ParseDate(val); }
                         break;
                     case 'b':
                         if (typeof val != 'boolean') { throwErr('OptionShouldBeBoolean'); }
@@ -1199,11 +1271,11 @@ DChart.getCore = function () {
                 __top: [['valueType', 's'], ['animation', 'b'], ['animationSteps', 'n'], ['animationEasing', 's'], ['scaleOverlay', 'b'], ['lineColor', 'c'], ['fontFamily', 's'], ['fontColor', 'c'], ['supportMouseEvents', 'b'], ['click', 'f'], ['mouseover', 'f'], ['mouseleave', 'f'], ['mouseoverTransparency', 'n'], ['mouseoverChangeCursor', 'b'], ['onAnimationComplete', 'f']],
                 title: [['show', 'b'], ['content', 's'], ['offtop', 'n'], ['height', 'n'], ['color', 'c'], ['fontsize', 'n'], ['fontfamily', 's'], ['fontweight', 's']],
                 subTitle: [['show', 'b'], ['content', 's'], ['height', 'n'], ['color', 'c'], ['fontsize', 'n'], ['fontfamily', 's'], ['fontweight', 's']],
-                legend: [['show', 'b'], ['enablecontrol', 'b'], ['linethrouth', 'b'], ['type', 's'], ['elementtype', 's'], ['placeX', 's'], ['placeY', 's'], ['sidelength', 'n'], ['offX', 'n'], ['offY', 'n'], ['bordercolor', 'c'], ['borderwidth', 'n'], ['fontcolor', 'c'], ['fontsize', 'n'], ['fontfamily', 's']],
+                legend: [['show', 'b'], ['enablecontrol', 'b'], ['strikethrough', 'b'], ['type', 's'], ['elementtype', 's'], ['placeX', 's'], ['placeY', 's'], ['sidelength', 'n'], ['offX', 'n'], ['offY', 'n'], ['bordercolor', 'c'], ['borderwidth', 'n'], ['fontcolor', 'c'], ['fontsize', 'n'], ['fontfamily', 's']],
                 background: [['bordercolor', 'c'], ['borderwidth', 'n']],
                 scale: [['linewidth', 'n'], ['linecolor', 'c'], ['backcolors', 'ca']],
                 labelAxis: [['labels', 'sa'], ['startlength', 'n'], ['endlength', 'n'], ['length', 'n'], ['linewidth', 'n'], ['linecolor', 'c'], ['fontcolor', 'c'], ['fontsize', 'n'], ['fontfamily', 's'], ['fontweight', 's'], ['fontrotate', 'n']],
-                valueAxis: [['length', 'n'], ['content', 'f'], ['minvalue', 'n'], ['maxvalue', 'n'], ['interval', 'n'], ['verticalcomputeP', 'b'], ['linewidth', 'n'], ['linecolor', 'c'], ['fontcolor', 'c'], ['fontsize', 'n'], ['fontfamily', 's'], ['fontweight', 's'], ['fontrotate', 'n']],
+                valueAxis: [['length', 'n'], ['content', 'f'], ['interval', 'n'], ['verticalcomputeP', 'b'], ['linewidth', 'n'], ['linecolor', 'c'], ['fontcolor', 'c'], ['fontsize', 'n'], ['fontfamily', 's'], ['fontweight', 's'], ['fontrotate', 'n']],
                 axis3d: [['sightangle', 'n'], ['marbleheight', 'n'], ['marblewidth', 'n'], ['marblelinewidth', 'n'], ['marblelinecolor', 'c'], ['stagewidth', 'n'], ['marbletopcolor', 'c'], ['marblerightcolor', 'c'], ['marblefacecolor', 'c'], ['curtainwidth', 'n']],
                 splitLine: [['show', 'b'], ['linewidth', 'n'], ['linecolor', 'c']],
                 cross: [['show', 'b'], ['length', 'n'], ['linewidth', 'n'], ['linecolor', 'c']],
@@ -1215,9 +1287,9 @@ DChart.getCore = function () {
                 shadow: [['show', 'b'], ['color', 'c'], ['blur', 'n'], ['offsetX', 'n'], ['offsetY', 'n']],
                 tip: [['show', 'b'], ['content', 'f'], ['tiptype', 's']]
             };
-            var checksets = function (sets, options) {
+            var checksets = function (sets, _options) {
                 for (var _item in sets) {
-                    var ops = _item == '__top' ? options : options[_item];
+                    var ops = _item == '__top' ? _options : _options[_item];
                     for (var i = 0, subitem; subitem = sets[_item][i]; i++) {
                         var name = _item == '__top' ? subitem[0] : _item + '.' + subitem[0];
                         var val = ops[subitem[0]];
@@ -1227,12 +1299,22 @@ DChart.getCore = function () {
                     }
                 }
             };
-            checksets(commonsets, inner.innerOptions);
-            checksets(DChart[inner.GraphType]._getCheckOptions(), inner.innerOptions);
+            var options = inner.innerOptions;
+            checksets(commonsets, options);
+            checksets(DChart[inner.GraphType]._getCheckOptions(), options);
             for (var i = 0, plugin; plugin = inner.plugins[i]; i++) {
                 checksets(commonsets, plugin.pluginOptions);
                 checksets(DChart[plugin.pluginType]._getCheckOptions(), plugin.pluginOptions);
             }
+            if (options.labelAxis.valueType !== undefined) {
+                options.labelAxis.minvalue = _checkOption('labelAxis.minvalue', options.labelAxis.minvalue, options.labelAxis.valueType) || options.labelAxis.minvalue;
+                options.labelAxis.maxvalue = _checkOption('labelAxis.maxvalue', options.labelAxis.maxvalue, options.labelAxis.valueType) || options.labelAxis.maxvalue;
+            }
+            if (options.splitpoint !== undefined) {
+                options.splitpoint = _checkOption('splitpoint', options.splitpoint, options.valueType) || options.splitpoint;
+            }
+            options.valueAxis.minvalue = _checkOption('valueAxis.minvalue', options.valueAxis.minvalue, options.valueType) || options.valueAxis.minvalue;
+            options.valueAxis.maxvalue = _checkOption('valueAxis.maxvalue', options.valueAxis.maxvalue, options.valueType) || options.valueAxis.maxvalue;
         };
         inner.AddPlugin = function (type, data, options, zIndex) {
             if (typeof type != 'string' || !DChart.Const.DrawAxis.__contains(type) && !DChart.Const.NotDrawAxis.__contains(type)) {
@@ -1397,9 +1479,12 @@ DChart.getCore = function () {
                 if (inner.onAnimation) { inner.onAnimation(percentAnimComplete); }
                 var easeAdjustedAnimationPercent = (options.animation) ? DChart.Methods.CapValue(easingFunction(percentAnimComplete), null, 0) : 1;
                 inner._clearDrawable(coordinate);
-                if (!valids.AxisValid || inner._configs.recreateAssists) { inner._createAssists(valids); }
+                if (!valids.AxisValid || inner._configs.recreateAssists || inner._configs._isIE678.isIE678) { inner._createAssists(valids); }
                 if (!options.scaleOverlay) {
-                    inner._createScales(valids);
+                    inner._createScales(valids, true, true);
+                }
+                if (options.scaleOverlay) {
+                    inner._createScales(valids, true);
                 }
                 for (var i = 0, task; task = tasks[i]; i++) {
                     if (options.scaleOverlay) {
@@ -1410,7 +1495,7 @@ DChart.getCore = function () {
                     }
                 }
                 if (options.scaleOverlay) {
-                    inner._createScales(valids);
+                    inner._createScales(valids, false, true);
                 }
                 if (percentAnimComplete < 1) {
                     requestAnimationFrame(animLoop);
@@ -1419,9 +1504,17 @@ DChart.getCore = function () {
                     inner.redrawAll = function () {
                         inner._clearDrawable(coordinate);
                         inner._createAssists();
-                        inner._createScales(valids);
+                        if (!options.scaleOverlay) {
+                            inner._createScales(valids, true, true);
+                        }
+                        if (options.scaleOverlay) {
+                            inner._createScales(valids, true);
+                        }
                         for (var i = 0, task; task = tasks[i]; i++) {
                             task.redraw();
+                        }
+                        if (options.scaleOverlay) {
+                            inner._createScales(valids, false, true);
                         }
                     };
                     for (var i = 0, task; task = tasks[i]; i++) {
@@ -1436,8 +1529,7 @@ DChart.getCore = function () {
                             var location = inner._getMouseLoction(e);
                             var x = location.X; var y = location.Y;
                             var index = null;
-                            if (x > legendcoor.left && x < legendcoor.left + legendcoor.width && y > legendcoor.top && y < legendcoor.top + legendcoor.height) {
-                                inner._configs.cursorPointer = true;
+                            if (x > legendcoor.left + legendcoor.borderwidth / 2 && x < legendcoor.left + legendcoor.width - legendcoor.borderwidth / 2 && y > legendcoor.top + legendcoor.borderwidth / 2 && y < legendcoor.top + legendcoor.height - legendcoor.borderwidth / 2) {
                                 var computed = inner._computeLegend();
                                 var lineelement = computed.elementtype == 'l';
                                 for (var i = 0; i < legendcoor.points.length; i++) {
@@ -1445,10 +1537,10 @@ DChart.getCore = function () {
                                     if (computed.type == 'column') {
                                         var _length = lineelement ? point.length / 2 : point.length;
                                         var _top = lineelement ? point.top - _length / 2 : point.top;
-                                        if (y > _top && y < _top + _length) { index = i; break; }
+                                        if (y > _top && y < _top + _length) { inner._configs.cursorPointer = true; index = i; break; }
                                     }
                                     else {
-                                        if (x > point.left && x < point.left + computed.sidelength + computed.sidedistance + computed.maxTextLength) { index = i; break; }
+                                        if (x > point.left && x < point.left + computed.sidelength + computed.sidedistance + computed.textlengths[i]) { inner._configs.cursorPointer = true; index = i; break; }
                                     }
                                 }
                             };
@@ -1526,20 +1618,20 @@ DChart.getCore = function () {
         inner._createTip = function (content, left, top) {
             var tipBox = document.createElement('span');
             var tiptype = inner.innerOptions.tip.tiptype || DChart.Const.Defaults.TipType;
-            tipBox.setAttribute('class', inner._configs.classes[tiptype]);
+            tipBox.setAttribute(inner._configs._isIE678.isIE67 ? 'className' : 'class', inner._configs.classes[tiptype]);
             tipBox.style.position = 'absolute';
-            tipBox.style.left = inner.parentdiv.offsetLeft + left + inner._configs.calculatedBasic.offleft + 'px';
-            tipBox.style.top = inner.parentdiv.offsetTop + top + inner._configs.calculatedBasic.offtop + 'px';
+            tipBox.style.left = left + inner._configs.calculatedBasic.offleft + 'px';
+            tipBox.style.top = top + inner._configs.calculatedBasic.offtop + 'px';
             tipBox.innerHTML = content;
             inner.parentdiv.appendChild(tipBox);
             return tipBox;
         };
         inner._changeTip = function (tip, left, top) {
             if (left) {
-                tip.style.left = inner.parentdiv.offsetLeft + left + inner._configs.calculatedBasic.offleft + 'px';
+                tip.style.left = left + inner._configs.calculatedBasic.offleft + 'px';
             }
             if (top) {
-                tip.style.top = inner.parentdiv.offsetTop + top + inner._configs.calculatedBasic.offtop + 'px';
+                tip.style.top = top + inner._configs.calculatedBasic.offtop + 'px';
             }
         };
         inner._getDrawableCoordinate = function () {
@@ -1584,12 +1676,12 @@ DChart.getCore = function () {
             var ops = inner.innerOptions.title;
             var canvasBorderWidth = inner.innerOptions.background.borderwidth || 0;
             var referencedlength = Math.min(inner.canvas.height - canvasBorderWidth * 2, inner.canvas.width / 2 - canvasBorderWidth);
-            var offtop = ops.offtop != null ? ops.offtop : 0;
             var height = ops.height != null ? ops.height : referencedlength / 15;
-            var fontsize = ops.fontsize || referencedlength / 18;
+            var offtop = ops.offtop != null ? ops.offtop : height / 8;
+            var fontsize = ops.fontsize || height * 0.8;
             ops = inner.innerOptions.subTitle;
             var subheight = ops.height != null ? ops.height : referencedlength / 18;
-            var subfontsize = ops.fontsize != null ? ops.fontsize : referencedlength / 21;
+            var subfontsize = ops.fontsize != null ? ops.fontsize : subheight * 0.8;
             var occupyTop = (valids.titleValid ? height + offtop : 0) + (valids.titleValid && valids.subTitleValid ? subheight : 0) + fontsize / 4;
             return { title: { height: height, offtop: offtop, fontsize: fontsize }, subTitle: { height: subheight, fontsize: subfontsize }, occupyTop: occupyTop };
         };
@@ -1600,7 +1692,7 @@ DChart.getCore = function () {
             var computed = inner._computeTitle(valids);
             var canvasBorderWidth = inner.innerOptions.background.borderwidth || 0;
             var centerX = inner.canvas.width / 2;
-            var bottom = canvasBorderWidth + computed.title.offtop + computed.title.height;
+            var bottom = canvasBorderWidth + computed.title.offtop + computed.title.height / 2 + computed.title.fontsize / 2;
             var textlength = inner.DrawFigures.createText(ops.content, centerX, bottom, 'center', (ops.fontweight || 'bold'), computed.title.fontsize, ops.fontfamily, ops.color);
             inner.coordinates.title = { left: centerX - textlength / 2, right: centerX + textlength / 2, top: bottom - computed.title.fontsize, bottom: bottom, fontsize: computed.title.fontsize, length: textlength };
             ops = inner.innerOptions.subTitle;
@@ -1635,10 +1727,12 @@ DChart.getCore = function () {
             var fontfamily = ops.fontfamily || inner.innerOptions.fontFamily || DChart.Const.Defaults.FontFamily;
             var maxTextLength = 0;
             var texts = [];
+            var textlengths = [];
             for (var i = 0, item; item = data[i]; i++) {
                 texts[i] = item.text || '';
                 if (typeof item.text == 'string') {
                     var length = inner.DrawFigures.measureText(item.text, null, fontsize, fontfamily);
+                    textlengths[i] = length;
                     if (maxTextLength < length) { maxTextLength = length; }
                 }
             }
@@ -1650,12 +1744,12 @@ DChart.getCore = function () {
                 legendHeight = data.length * ((elementtype == 'l' ? sidelength / 2 : sidelength) + sidedistance) - sidedistance + sideoffY * 2 + borderwidth * 2;
             }
             else {
-                legendWidth = data.length * (sidelength + sidedistance * 2 + maxTextLength) - sidedistance + sideoffX * 2 + borderwidth * 2;
+                legendWidth = data.length * (sidelength + sidedistance * 2) + textlengths.__sum() - sidedistance + sideoffX * 2 + borderwidth * 2;
                 legendHeight = sideoffY * 2 + (elementtype == 'l' ? sidelength / 2 : sidelength) + borderwidth * 2;
             }
 
             var left = (placeX == 'left' ? offX : (placeX == 'center' ? fullWidth / 2 - legendWidth / 2 : fullWidth + canvasBorderWidth - offX - legendWidth)) + borderwidth;
-            var titleHeight = valids.titleValid ? inner._computeTitle(valids).occupyTop : 0;
+            var titleHeight = valids.titleValid ? inner._computeTitle(valids).occupyTop : inner.canvas.height / 45;
             var top = offY + canvasBorderWidth + titleHeight;
             var estimateYAxisHeight = (valids.AxisValid ? fullHeight / 7.5 : 0);
             if (placeY == 'bottom') { top = fullHeight + canvasBorderWidth - legendHeight - offY - (placeX == 'center' || type == 'row' ? 0 : estimateYAxisHeight); }
@@ -1670,7 +1764,7 @@ DChart.getCore = function () {
                 legendWidth: legendWidth, legendHeight: legendHeight, type: type, placeX: placeX, placeY: placeY, elementtype: elementtype,
                 sidelength: sidelength, sidedistance: sidedistance, sideoffY: sideoffY, sideoffX: sideoffX,
                 borderwidth: borderwidth, fontsize: fontsize, fontfamily: fontfamily,
-                maxTextLength: maxTextLength, texts: texts,
+                maxTextLength: maxTextLength, texts: texts, textlengths: textlengths,
                 left: left, top: top,
                 occupyTop: occupyTop, occupyBottom: occupyBottom, occupyLeft: occupyLeft, occupyRight: occupyRight
             };
@@ -1691,7 +1785,7 @@ DChart.getCore = function () {
             for (var i = 0, item; item = inner._configs.dataBackup[i]; i++) {
                 var left = computed.left + computed.sideoffX + computed.borderwidth;
                 if (computed.type == 'row') {
-                    left += i * (computed.sidelength + computed.sidedistance * 2 + computed.maxTextLength);
+                    left += i * (computed.sidelength + computed.sidedistance * 2) + computed.textlengths.slice(0, i).__sum();
                 }
                 var top = computed.top + computed.sideoffY + computed.borderwidth;
                 if (computed.type == 'column') {
@@ -1703,23 +1797,23 @@ DChart.getCore = function () {
                 if (!showdimcolor) { index++; }
                 if (lineelement) {
                     var _top = top + computed.sidelength * 0.3;
-                    inner.DrawFigures.createLine(left, _top, left + computed.sidelength, _top, 2, color);
+                    inner.DrawFigures.createLine(left, _top, left + computed.sidelength, _top, 3, color);
                     if (showlightcolor) {
-                        inner.DrawFigures.createLine(left, _top, left + computed.sidelength, _top, 2, lightcolor);
+                        inner.DrawFigures.createLine(left, _top, left + computed.sidelength, _top, 3, lightcolor);
                     }
                     points[i] = { length: computed.sidelength, left: left, top: _top };
                 }
                 else {
-                    inner.DrawFigures.createPointElement(computed.elementtype, left, top, computed.sidelength, color, computed.elementtype != 'x', color, 1, computed.elementtype == 'x');
+                    inner.DrawFigures.createPointElement(computed.elementtype, left, top, computed.sidelength, color, computed.elementtype != 'x', color, 2, computed.elementtype == 'x');
                     if (showlightcolor) {
-                        inner.DrawFigures.createPointElement(computed.elementtype, left, top, computed.sidelength, lightcolor, computed.elementtype != 'x', lightcolor, 1, computed.elementtype == 'x');
+                        inner.DrawFigures.createPointElement(computed.elementtype, left, top, computed.sidelength, lightcolor, computed.elementtype != 'x', lightcolor, 2, computed.elementtype == 'x');
                     }
                     points[i] = { length: computed.sidelength, left: left, top: top };
                 }
                 var textleft = left + computed.sidelength + (computed.elementtype == 'x' ? 5 : 3);
                 var textbottom = top + computed.sidelength * (lineelement ? 0.45 : 0.9);
                 var textlength = inner.DrawFigures.createText(computed.texts[i], textleft, textbottom, null, null, computed.fontsize, computed.fontfamily, showdimcolor ? dimcolor : ops.fontcolor, null);
-                if (showdimcolor && ops.linethrouth) {
+                if (showdimcolor && ops.strikethrough) {
                     var lineY = textbottom - computed.fontsize / 3;
                     inner.DrawFigures.createLine(textleft, lineY, textleft + textlength, lineY, 1, dimcolor);
                 }
@@ -1807,6 +1901,10 @@ DChart.getCore = function () {
                 scalecount++;
             }
             maxvalue = DChart.Methods.AddInnerValue(valueType, val, -interval);
+            if ((valueType == 'p' || valueType == 'n') && maxvalue < maxval) {
+                maxvalue += interval;
+                scalecount++;
+            }
 
             maxvalue = DChart.Methods.FormatNumber(maxvalue);
             minvalue = DChart.Methods.FormatNumber(minvalue);
@@ -1884,7 +1982,7 @@ DChart.getCore = function () {
             }
             var formatValue = function (valueAxis, valueType, value, i, j, k) {
                 if ((valueType == 'd' || valueType == 't') && !value.getDate) {
-                    var parseDate = Date.parse(value.replace(/-/g, "/"));
+                    var parseDate = Date.parse(value.toString().replace(/-/g, "/"));
                     if (isNaN(parseDate)) {
                         throw new Error(inner._messages.WrongData + "'" + value + "'" + inner._messages.NeedDateData);
                     }
@@ -1969,8 +2067,11 @@ DChart.getCore = function () {
                                 throw new Error(inner._messages.WrongData + "'" + value + "'" + inner._messages.AxisVauleShouldBeDArray);
                             }
                             lValue = value[0]; vValue = value[1];
+                            if (isRange && vValue.length != 2) {
+                                throw new Error(inner._messages.ValueAxisValueShouldBeDArray);
+                            }
                         }
-                        if (lValue) {
+                        if (lValue != null) {
                             lValue = formatValue(false, lValueType, lValue, i, j, 0);
                             updateLabelExtreme(lValue);
                         }
@@ -2008,8 +2109,11 @@ DChart.getCore = function () {
                             throw new Error(inner._messages.WrongData + "'" + item.value + "'" + inner._messages.AxisVauleShouldBeDArray);
                         }
                         lValue = item.value[0]; vValue = item.value[1];
+                        if (isRange && vValue.length != 2) {
+                            throw new Error(inner._messages.ValueAxisValueShouldBeDArray);
+                        }
                     }
-                    if (lValue) {
+                    if (lValue != null) {
                         lValue = formatValue(false, lValueType, lValue, i, 0);
                         updateLabelExtreme(lValue);
                     }
@@ -2126,31 +2230,33 @@ DChart.getCore = function () {
             if (inner._configs.axisSize) { return inner._configs.axisSize; }
             var options = inner.innerOptions;
             var axisData = inner._configs.axisData;
-            var upturnAxis = inner._configs.upturnAxis;
+            var invertAxis = inner._configs.invertAxis;
             var canvasBorderWidth = inner.innerOptions.background.borderwidth || 0;
             var valids = valids || inner._calculateOutersValid();
             var legendSize = valids.legendValid ? inner._computeLegend() : null;
-            var titleHeight = inner.canvas.height / 35;
+            var titleHeight = inner.canvas.height / 30;
             if (valids.titleValid) { titleHeight = inner._computeTitle(valids).occupyTop; }
             var draw3daxis = DChart.Const.Draw3DAxis.__contains(inner.GraphType);
 
             var availableWidth = inner.canvas.width - canvasBorderWidth * 2 - (legendSize ? legendSize.occupyLeft : 0) - (legendSize ? legendSize.occupyRight : 0);
             var availableHeight = inner.canvas.height - canvasBorderWidth * 2 - titleHeight - (legendSize ? legendSize.occupyTop : 0) - (legendSize ? legendSize.occupyBottom : 0);
 
-            var tmpAxisWidth = availableWidth / (upturnAxis ? 8 : DChart.Const.Defaults.AxisYDrawableCut[axisData.vValueType]);
+            var tmpAxisWidth = availableWidth / (invertAxis ? 8 : DChart.Const.Defaults.AxisYDrawableCut[axisData.vValueType]);
             var tmpAxisHeight = availableHeight / DChart.Const.Defaults.AxisXDrawableCut;
-            var labelAxisLength = options.labelAxis.length || (upturnAxis ? tmpAxisWidth : tmpAxisHeight);
-            var valueAxisLength = options.valueAxis.length || (upturnAxis ? tmpAxisHeight : tmpAxisWidth);
-            var yAxisWidth = upturnAxis ? labelAxisLength : valueAxisLength;
-            var xAxisHeight = upturnAxis ? valueAxisLength : labelAxisLength;
-            var captionLength = upturnAxis ? yAxisWidth / 8 : (valids.titleValid || legendSize && legendSize.occupyTop > 0 ? xAxisHeight / 8 : titleHeight * 2.5);
-            var margin = (valids.legendValid && legendSize.placeY == 'middle' ? captionLength / 2 : yAxisWidth / 3);
+            var labelAxisLength = options.labelAxis.length || (invertAxis ? tmpAxisWidth : tmpAxisHeight);
+            var valueAxisLength = options.valueAxis.length || (invertAxis ? tmpAxisHeight : tmpAxisWidth);
+            var yAxisWidth = invertAxis ? labelAxisLength : valueAxisLength;
+            var xAxisHeight = invertAxis ? valueAxisLength : labelAxisLength;
+            var marginRight = valids.legendValid && legendSize.placeY == 'middle' ? yAxisWidth / 8 : yAxisWidth / 2;
+            var marginTop = valids.titleValid ? xAxisHeight / 10 : xAxisHeight / 6;
+            if (!invertAxis && (typeof options.caption.content == 'string' || options.caption.content != '')) { marginTop += xAxisHeight / 10; }
+            if (legendSize && legendSize.occupyTop > 0) { marginTop = 0 }
             var scaleLineWidth = options.scale.linewidth == null ? 1 : options.scale.linewidth;
             var closeLineWidth = options.close.linewidth || scaleLineWidth || 1;
             var labelAxisLineWidth = options.labelAxis.linewidth == null ? 1 : options.labelAxis.linewidth;
             var valueAxisLineWidth = options.valueAxis.linewidth == null ? 1 : options.valueAxis.linewidth;
-            var xAxisLineWidth = upturnAxis ? valueAxisLineWidth : labelAxisLineWidth;
-            var yAxisLineWidth = upturnAxis ? labelAxisLineWidth : valueAxisLineWidth;
+            var xAxisLineWidth = invertAxis ? valueAxisLineWidth : labelAxisLineWidth;
+            var yAxisLineWidth = invertAxis ? labelAxisLineWidth : valueAxisLineWidth;
             var crossLength = options.cross.length || valueAxisLength / 15;
 
             var axis3dconfigs = null;
@@ -2173,25 +2279,24 @@ DChart.getCore = function () {
                 }
             }
 
-
-            var maxX = inner.canvas.width - canvasBorderWidth - margin - (legendSize ? legendSize.occupyRight : 0) - (upturnAxis ? captionLength : 0);
+            var maxX = inner.canvas.width - canvasBorderWidth - marginRight - (legendSize ? legendSize.occupyRight : 0);
             var maxY = inner.canvas.height - xAxisHeight - canvasBorderWidth - (legendSize ? legendSize.occupyBottom : 0);
             var minX = canvasBorderWidth + yAxisWidth + (legendSize ? legendSize.occupyLeft : 0);
-            var minY = canvasBorderWidth + titleHeight + (legendSize && legendSize.occupyTop > 0 ? legendSize.occupyTop : xAxisHeight / 10);
+            var minY = canvasBorderWidth + titleHeight + marginTop + (legendSize && legendSize.occupyTop > 0 ? legendSize.occupyTop : xAxisHeight / 10);
             if (axis3dconfigs) {
                 minX += axis3dconfigs.sinsightangle * axis3dconfigs.stagewidth;
                 maxY -= axis3dconfigs.cossightangle * axis3dconfigs.stagewidth;
             }
 
-            var axisValueCut = (upturnAxis ? maxX - minX : maxY - minY) / axisData.vScalecount;
+            var axisValueCut = (invertAxis ? maxX - minX : maxY - minY) / axisData.vScalecount;
 
             var multiple = axisData.multiple;
             var labelCount = axisData.lLabels.length || (multiple ? inner.innerData[0].value.length : inner.innerData.length);
             var fromFirstLeft = DChart.Const.AxisFromFirstLeft.__contains(inner.GraphType);
             var startlength = 0;
             var endlength = 0;
-            var lMaxLength = upturnAxis ? maxY - minY : maxX - minX;
-            var vMaxLength = upturnAxis ? maxX - minX : maxY - minY;
+            var lMaxLength = invertAxis ? maxY - minY : maxX - minX;
+            var vMaxLength = invertAxis ? maxX - minX : maxY - minY;
             if (!fromFirstLeft) {
                 startlength = options.labelAxis.startlength;
                 endlength = options.labelAxis.endlength;
@@ -2205,11 +2310,11 @@ DChart.getCore = function () {
                     throw new Error(inner._messages.WrongParam + inner._messages.LabelDistanceExceedMax);
                 }
             }
-            var startPos = (upturnAxis ? minY : minX) + startlength;
+            var startPos = (invertAxis ? maxY : minX) + (invertAxis ? -endlength : startlength);
             var labelDistance = (lMaxLength - startlength - endlength) / (labelCount - 1);
             var splitLinePos = null;
             if (DChart.Const.ComputeSplitPoint.__contains(inner.GraphType)) {
-                splitLinePos = (upturnAxis ? minX : minY) + vMaxLength * inner._getFormatDiff(axisData.vValueType, (upturnAxis ? axisData.vMinValue : axisData.vMaxValue), axisData.splitpoint) / inner._getFormatDiff(axisData.vValueType, axisData.vMinValue, axisData.vMaxValue);
+                splitLinePos = (invertAxis ? minX : minY) + vMaxLength * inner._getFormatDiff(axisData.vValueType, (invertAxis ? axisData.vMinValue : axisData.vMaxValue), axisData.splitpoint) / inner._getFormatDiff(axisData.vValueType, axisData.vMinValue, axisData.vMaxValue);
             }
             var axisconfigs = {
                 labelAxisLength: labelAxisLength, valueAxisLength: valueAxisLength, yAxisWidth: yAxisWidth, xAxisHeight: xAxisHeight,
@@ -2231,11 +2336,11 @@ DChart.getCore = function () {
             if (typeof options.valueAxis.content != 'function') { return; }
             var axisData = inner._configs.axisData;
             var axisSize = inner._configs.axisSize || inner._computeAxis(valids);
-            var upturnAxis = inner._configs.upturnAxis;
+            var invertAxis = inner._configs.invertAxis;
             var vTimeType = axisData.vValueType == 'd' || axisData.vValueType == 't';
             var lTimeType = axisData.lValueType == 'd' || axisData.lValueType == 't';
 
-            var vfontsize = options.valueAxis.fontsize || (upturnAxis ? 1.3 : 1) * (axisSize.valueAxisLength - axisSize.valueAxisLineWidth) / (vTimeType ? 7 : 5);
+            var vfontsize = options.valueAxis.fontsize || (invertAxis ? 1.3 : 1) * (axisSize.valueAxisLength - axisSize.valueAxisLineWidth) / (vTimeType ? 7 : 5);
             var vfontweight = options.valueAxis.fontweight || 'normal';
             var vfontfamily = options.valueAxis.fontfamily || options.fontFamily || DChart.Const.Defaults.FontFamily;
             var vLabelFontColor = options.valueAxis.fontcolor;
@@ -2259,7 +2364,7 @@ DChart.getCore = function () {
                             }
                             else {
                                 var length0 = i == 0 ? 0 : inner.DrawFigures.measureText(labels[i - 1], fontweight, fontsize, fontfamily);
-                                var distance = upturnAxis ? axisSize.valueAxisLength : axisSize.labelDistance;
+                                var distance = invertAxis ? axisSize.valueAxisLength : axisSize.labelDistance;
                                 if (i > 0 && distance * sinx < fontsize && (length1 + length0 > 2 * distance / cosx)) {
                                     tmpOverlap = true; break;
                                 }
@@ -2275,7 +2380,7 @@ DChart.getCore = function () {
             };
             var drawAxisBasicLine = function () {
                 if (axisSize.valueAxisLineWidth && axisSize.valueAxisLineWidth > 0) {
-                    if (upturnAxis) {
+                    if (invertAxis) {
                         var y = axisSize.maxY + axisSize.valueAxisLineWidth / 2;
                         inner.DrawFigures.createLine(axisSize.minX - axisSize.labelAxisLineWidth, y, axisSize.maxX + axisSize.valueAxisLength / 20, y, axisSize.valueAxisLineWidth, vLineColor);
                     }
@@ -2285,7 +2390,7 @@ DChart.getCore = function () {
                     }
                 }
                 if (axisSize.labelAxisLineWidth && axisSize.labelAxisLineWidth > 0) {
-                    if (upturnAxis) {
+                    if (invertAxis) {
                         var x = axisSize.minX - axisSize.labelAxisLineWidth / 2;
                         inner.DrawFigures.createLine(x, axisSize.minY - (options.close.show ? axisSize.closeLineWidth : 0), x, axisSize.maxY, axisSize.labelAxisLineWidth, options.labelAxis.linecolor || DChart.Const.Defaults.AxisLineColor);
                     }
@@ -2313,10 +2418,10 @@ DChart.getCore = function () {
                 var labels = axisData.vLabels;
                 var contentX = axisSize.minX - vLabelStartX;
                 var contentY = axisSize.maxY + (options.cross.show ? axisSize.crossLength : 3) + axisSize.valueAxisLineWidth + 3 + vfontsize;
-                var rotate = formatRotate(options.valueAxis.fontrotate, !upturnAxis, labels, vfontweight, vfontsize, vfontfamily);
+                var rotate = formatRotate(options.valueAxis.fontrotate, !invertAxis, labels, vfontweight, vfontsize, vfontfamily);
                 inner.coordinates.axis.vlabels = [];
                 for (var i = 0; i <= axisData.vScalecount; i++) {
-                    if (upturnAxis) {
+                    if (invertAxis) {
                         var centerX = axisSize.minX + i * axisSize.axisValueCut;
                         var textLength = inner.DrawFigures.createText(labels[i], centerX, contentY, 'center', vfontweight, vfontsize, vfontfamily, vLabelFontColor, rotate, 'right');
                         inner.coordinates.axis.vlabels[i] = { index: i, left: centerX - textLength / 2, right: centerX + textLength / 2, top: contentY - vfontsize, bottom: contentY, fontsize: vfontsize, length: textLength };
@@ -2334,12 +2439,12 @@ DChart.getCore = function () {
                 var fontweight = options.labelAxis.fontweight || vfontweight;
                 var fontfamily = options.labelAxis.fontfamily || vfontfamily;
                 var fontcolor = options.labelAxis.fontcolor || vLabelFontColor;
-                var rotate = formatRotate(options.labelAxis.fontrotate, upturnAxis, labels, fontweight, fontsize, fontfamily);
+                var rotate = formatRotate(options.labelAxis.fontrotate, invertAxis, labels, fontweight, fontsize, fontfamily);
                 inner.coordinates.axis.llabels = [];
                 for (var i = 0, label; label = labels[i]; i++) {
-                    if (upturnAxis) {
-                        var right = axisSize.minX - axisSize.valueAxisLineWidth - fontsize * (rotate < 0 ? 1 : 0.5);
-                        var bottom = axisSize.startPos + (axisSize.labelDistance) * i + fontsize / 2;
+                    if (invertAxis) {
+                        var right = axisSize.minX - axisSize.labelAxisLineWidth - fontsize * (rotate < 0 ? 1 : 0.5);
+                        var bottom = axisSize.startPos - (axisSize.labelDistance) * i + fontsize / 2;
                         var textLength = inner.DrawFigures.createText(label, right, bottom, 'right', fontweight, fontsize, fontfamily, fontcolor, rotate);
                         inner.coordinates.axis.llabels[i] = { index: i, left: right - textLength, right: right, top: bottom - fontsize, bottom: bottom, fontsize: fontsize, length: textLength };
                     }
@@ -2356,7 +2461,7 @@ DChart.getCore = function () {
             var drawCaption = function () {
                 if (typeof options.caption.content != 'string') { return; }
                 var size = options.caption.fontsize || (vfontsize + (vTimeType ? 2 : -1));
-                if (upturnAxis) {
+                if (invertAxis) {
                     var centerX = Math.min(axisSize.maxX + size * 1.5, inner.canvas.width - canvasBorderWidth - size);
                     var centerY = axisSize.maxY + axisSize.xAxisLineWidth / 2;
                     var textlength = inner.DrawFigures.createText(options.caption.content, centerX, centerY, 'center', options.caption.fontweight, size, options.caption.fontfamily, options.caption.fontcolor || vLabelFontColor, 0.5);
@@ -2375,7 +2480,7 @@ DChart.getCore = function () {
                 var linewidth = options.cross.linewidth;
                 var linecolor = options.cross.linecolor || vLineColor;
                 var crossLength = axisSize.crossLength;
-                if (upturnAxis) {
+                if (invertAxis) {
                     var startY = axisSize.maxY + axisSize.valueAxisLineWidth;
                     var endY = axisSize.maxY + axisSize.valueAxisLineWidth + axisSize.crossLength;
                     var linecut = Math.floor((axisSize.scaleLineWidth + 0.1) / 2);
@@ -2401,9 +2506,9 @@ DChart.getCore = function () {
             var drawCloseLine = function () {
                 if (!(options.close.show && axisSize.closeLineWidth && axisSize.closeLineWidth > 0)) { return; }
                 var linecolor = options.close.linecolor || options.scale.linecolor || DChart.Const.Defaults.ScaleLineColor;
-                if (upturnAxis) {
+                if (invertAxis) {
                     var closeY = axisSize.minY - axisSize.closeLineWidth / 2;
-                    inner.DrawFigures.createLine(axisSize.minX, closeY, axisSize.maxX, closeY, axisSize.closeLineWidth, linecolor);
+                    inner.DrawFigures.createLine(axisSize.minX, closeY, axisSize.maxX + 1, closeY, axisSize.closeLineWidth, linecolor);
                 }
                 else {
                     var closeX = axisSize.maxX + axisSize.closeLineWidth / 2;
@@ -2416,7 +2521,7 @@ DChart.getCore = function () {
                 var fontsize = ops.fontsize || axisSize.yAxisWidth / 5;
                 var fontweight = ops.fontweight || 'bold';
                 var centerY = (axisSize.minY + axisSize.maxY) / 2;
-                var right = axisSize.minX - axisSize.yAxisLineWidth - (axisSize.yAxisWidth - axisSize.yAxisLineWidth) * (ops.titlelocation || (upturnAxis ? 0.75 : DChart.Const.Defaults.AxisYTitleLocation[axisData.vValueType]));
+                var right = axisSize.minX - axisSize.yAxisLineWidth - (axisSize.yAxisWidth - axisSize.yAxisLineWidth) * (ops.titlelocation || (invertAxis ? 0.75 : DChart.Const.Defaults.AxisYTitleLocation[axisData.vValueType]));
                 var textlength = inner.DrawFigures.createText(ops.content, right, centerY, 'center', fontweight, fontsize, ops.fontfamily, ops.fontcolor, -0.5);
                 inner.coordinates.axis.yAxisTitle = { top: centerY - textlength / 2, bottom: centerY + textlength / 2, left: right - fontsize, right: right, fontsize: fontsize, length: textlength };
             };
@@ -2426,7 +2531,7 @@ DChart.getCore = function () {
                 var fontsize = ops.fontsize || axisSize.xAxisHeight / 5;
                 var fontweight = ops.fontweight || 'bold';
                 var centerX = inner.canvas.width / 2;
-                var bottom = axisSize.maxY + axisSize.xAxisLineWidth + (axisSize.xAxisHeight - axisSize.xAxisLineWidth) * (ops.titlelocation || (upturnAxis ? 0.75 : DChart.Const.Defaults.AxisXTitleLocation[axisData.vValueType]));
+                var bottom = axisSize.maxY + axisSize.xAxisLineWidth + (axisSize.xAxisHeight - axisSize.xAxisLineWidth) * (ops.titlelocation || (invertAxis ? 0.75 : DChart.Const.Defaults.AxisXTitleLocation[axisData.vValueType]));
                 var textlength = inner.DrawFigures.createText(ops.content, centerX, bottom, 'center', fontweight, fontsize, ops.fontfamily, ops.fontcolor);
                 inner.coordinates.axis.xAxisTitle = { top: bottom - fontsize, bottom: bottom, left: centerX - textlength / 2, right: centerX + textlength / 2, fontsize: fontsize, length: textlength };
             };
@@ -2457,7 +2562,7 @@ DChart.getCore = function () {
             var textlength = inner.DrawFigures.createText(ops.content, right, bottom, 'right', ops.fontweight, fontsize, ops.fontfamily, fontcolor);
             inner.coordinates.footer = { top: bottom - fontsize, bottom: bottom, right: right, left: right - textlength, fontsize: fontsize, length: textlength };
         };
-        inner._createScales = function (valids) {
+        inner._createScales = function (valids, drawBackOnly, drawLineOnly) {
             var valids = valids || inner._calculateOutersValid();
             if (!valids.AxisValid || inner.innerData.length == 0) { return; }
             var options = inner.innerOptions;
@@ -2467,57 +2572,58 @@ DChart.getCore = function () {
             var linecut = Math.floor((scaleLineWidth + 0.1) / 2);
             var scaleLineColor = options.scale.linecolor || DChart.Const.Defaults.ScaleLineColor;
             var scaleBackColors = options.scale.backcolors;
-            var upturnAxis = inner._configs.upturnAxis;
-            if (scaleBackColors && scaleBackColors.length == 1) {
+            var invertAxis = inner._configs.invertAxis;
+            if (drawBackOnly && scaleBackColors && scaleBackColors.length == 1) {
                 inner.DrawFigures.createRectangleFill(axisSize.minX, axisSize.minY, axisSize.maxX - axisSize.minX, axisSize.maxY - axisSize.minY, scaleBackColors[0]);
             }
             for (var i = 1; i <= axisData.vScalecount; i++) {
-                if (upturnAxis) {
+                if (invertAxis) {
                     var x = axisSize.maxX - i * axisSize.axisValueCut;
                     if (i == axisData.vScalecount && x < axisSize.minX) { x = axisSize.minX; }
-                    if (scaleBackColors && scaleBackColors.length > 1) {
+                    if (drawBackOnly && scaleBackColors && scaleBackColors.length > 1) {
                         var color = scaleBackColors.length ? scaleBackColors[(i - 1) % scaleBackColors.length] : null;
                         if (i < axisData.vScalecount) { x -= linecut; }
                         inner.DrawFigures.createRectangleFill(x, axisSize.minY, axisSize.axisValueCut - linecut, axisSize.maxY - axisSize.minY, color);
                     }
-                    if (scaleLineWidth > 0) {
+                    if (drawLineOnly && scaleLineWidth > 0) {
                         inner.DrawFigures.createLine(x + axisSize.axisValueCut, axisSize.minY, x + axisSize.axisValueCut, axisSize.maxY, scaleLineWidth, scaleLineColor);
                     }
                 }
                 else {
                     var y = axisSize.maxY - i * axisSize.axisValueCut;
-                    if (scaleBackColors && scaleBackColors.length > 1) {
+                    if (drawBackOnly && scaleBackColors && scaleBackColors.length > 1) {
                         var color = scaleBackColors.length ? scaleBackColors[(i - 1) % scaleBackColors.length] : null;
                         y += scaleLineWidth / 2;
                         var height = axisSize.axisValueCut - scaleLineWidth / 2;
                         if (i == 1) { height += 1; }
                         inner.DrawFigures.createRectangleFill(axisSize.minX, y, axisSize.maxX - axisSize.minX, height, color);
                     }
-                    if (scaleLineWidth > 0) {
+                    if (drawLineOnly && scaleLineWidth > 0) {
                         inner.DrawFigures.createLine(axisSize.minX, y, axisSize.maxX, y, scaleLineWidth, scaleLineColor);
                     }
                 }
             }
-            if (options.scale.drawvertical) {
+            if (drawLineOnly && options.scale.drawvertical) {
                 var drawCloseLine = options.close.show && axisSize.closeLineWidth && axisSize.closeLineWidth > 0;
                 for (var i = 1; i < axisData.lScalecount + (drawCloseLine ? 0 : 1) ; i++) {
-                    var pos = axisSize.startPos + i * axisSize.labelDistance;
-                    if (upturnAxis) {
+                    if (invertAxis) {
+                        var pos = axisSize.startPos - i * axisSize.labelDistance;
                         if (scaleLineWidth > 0) {
                             inner.DrawFigures.createLine(axisSize.minX, pos, axisSize.maxX, pos, scaleLineWidth, scaleLineColor);
                         }
                     }
                     else {
+                        var pos = axisSize.startPos + i * axisSize.labelDistance;
                         if (scaleLineWidth > 0) {
                             inner.DrawFigures.createLine(pos, axisSize.minY, pos, axisSize.maxY + 1, scaleLineWidth, scaleLineColor);
                         }
                     }
                 }
             }
-            if (DChart.Const.DrawSplitLine.__contains(inner.GraphType) && options.splitLine.show) {
+            if (drawLineOnly && DChart.Const.DrawSplitLine.__contains(inner.GraphType) && options.splitLine.show) {
                 var linecolor = options.splitLine.linecolor;
                 var linewidth = options.splitLine.linewidth;
-                if (upturnAxis) {
+                if (invertAxis) {
                     inner.DrawFigures.createLine(axisSize.splitLinePos, axisSize.minY, axisSize.splitLinePos, axisSize.maxY, linewidth || 1, linecolor);
                 }
                 else {
@@ -2584,7 +2690,6 @@ DChart.getCore = function () {
                     }
                     break;
                 case 'x':
-                    length += linewidth;
                     if (middle) {
                         ctx.moveTo(X - length / 2, Y - length / 2);
                         ctx.lineTo(X + length / 2, Y + length / 2);
@@ -2778,10 +2883,10 @@ DChart.getCore = function () {
             ctx.stroke();
             ctx.restore();
         };
-        inner.DrawFigures.curveSmoothPoints = function (ctx, point0, point1, upturnAxis) {
+        inner.DrawFigures.curveSmoothPoints = function (ctx, point0, point1, invertAxis) {
             var centerX = (point0[0] + point1[0]) / 2;
             var centerY = (point0[1] + point1[1]) / 2;
-            if (upturnAxis) {
+            if (invertAxis) {
                 ctx.quadraticCurveTo(point0[0], 0.5 * centerY + 0.5 * point0[1], centerX, centerY);
                 ctx.quadraticCurveTo(point1[0], 0.5 * centerY + 0.5 * point1[1], point1[0], point1[1]);
             }
@@ -2790,7 +2895,7 @@ DChart.getCore = function () {
                 ctx.quadraticCurveTo(0.5 * centerX + 0.5 * point1[0], point1[1], point1[0], point1[1]);
             }
         };
-        inner.DrawFigures.createSmoothLine = function (points, linewidth, linecolor, upturnAxis) {
+        inner.DrawFigures.createSmoothLine = function (points, linewidth, linecolor, invertAxis) {
             var ctx = inner.ctx;
             var len = points.length;
             if (len < 3) { return; }
@@ -2800,12 +2905,12 @@ DChart.getCore = function () {
             ctx.beginPath();
             ctx.moveTo(points[0][0], points[0][1]);
             for (var i = 0; i < len - 1; i++) {
-                inner.DrawFigures.curveSmoothPoints(ctx, points[i], points[i + 1]);
+                inner.DrawFigures.curveSmoothPoints(ctx, points[i], points[i + 1], invertAxis);
             }
             ctx.stroke();
             ctx.restore();
         };
-        inner.DrawFigures.createCloseFigure = function (points, fillcolor, linewidth, linecolor, smoothline, upturnAxis, shadow) {
+        inner.DrawFigures.createCloseFigure = function (points, fillcolor, linewidth, linecolor, smoothline, invertAxis, shadow) {
             var ctx = inner.ctx;
             ctx.save();
             ctx.beginPath();
@@ -2813,7 +2918,7 @@ DChart.getCore = function () {
             ctx.moveTo(points[0][0], points[0][1]);
             for (var i = 0; i < len - 1; i++) {
                 if (!smoothline) { ctx.lineTo(points[i + 1][0], points[i + 1][1]); }
-                else { inner.DrawFigures.curveSmoothPoints(ctx, points[i], points[i + 1], upturnAxis); }
+                else { inner.DrawFigures.curveSmoothPoints(ctx, points[i], points[i + 1], invertAxis); }
             }
             ctx.closePath();
             if (shadow) {
@@ -2886,7 +2991,7 @@ DChart.getCore = function () {
             var halfXLength = (coordinate.maxX - coordinate.minX) / 2;
             var halfYLength = (coordinate.maxY - coordinate.minY) / 2;
             var minAvailableLength = Math.min(halfXLength, halfYLength);
-            var margin = options.margin == null && (options.labels || options.outerLabel.show) ? minAvailableLength / 6 : 1;
+            var margin = options.margin == null && (options.radar || options.outerLabel.show) ? minAvailableLength / 6 : minAvailableLength / 10;
             if (DChart.Methods.IsNumber(options.margin) && options.margin > 0) {
                 margin = options.margin;
             }
@@ -2935,6 +3040,29 @@ DChart.getCore = function () {
                 segmentTotals[k] = tmpTotal;
             }
             return { multiple: multiple, segmentTotal: segmentTotal, segmentTotals: segmentTotals, minval: minval, maxval: maxval };
+        };
+        inner._methodsFor3D = {
+            computeLoc: function (pieshape) {
+                pieshape.isRight = DChart.Methods.JudgeBetweenAngle(-Math.PI * 0.5, Math.PI * 0.5, pieshape.midAngle);
+                pieshape.isBottom = DChart.Methods.JudgeBetweenAngle(pieshape.angleMin, pieshape.angleMax, Math.PI / 2);
+                pieshape.isTop = DChart.Methods.JudgeBetweenAngle(pieshape.angleMin, pieshape.angleMax, -Math.PI / 2);
+            },
+            pieshapeSort: function (shapeitem0, shapeitem1) {
+                if (shapeitem0.isBottom) { return 1; }
+                else if (shapeitem1.isBottom) { return -1; }
+                else if (shapeitem0.isTop) { return -1; }
+                else if (shapeitem1.isTop) { return 1; }
+                else {
+                    if (shapeitem0.isRight == shapeitem1.isRight) {
+                        if (shapeitem0.isRight) { return DChart.Methods.judgeClockwiseBehind(-0.5, 0.5, shapeitem0.midAngle, shapeitem1.midAngle) ? -1 : 1; }
+                        else { return DChart.Methods.judgeClockwiseBehind(0.5, 1.5, shapeitem0.midAngle, shapeitem1.midAngle) ? 1 : -1; }
+                    }
+                    else {
+                        if (shapeitem0.isRight) { return -1; }
+                        else { return 1; }
+                    }
+                }
+            }
         };
         inner._initial();
     };

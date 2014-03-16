@@ -52,7 +52,7 @@ DChart.HeapBar._drawgraphic = function (inner, graphicID, innerData, options) {
         throw new Error(inner._messages.WrongData + inner._messages.DataMustBeMultipleArray);
     }
     if (graphicID == inner.ID) {
-        inner._configs.upturnAxis = true;
+        inner._configs.invertAxis = true;
         inner._configs.notAllowValueNegative = true;
     }
 
@@ -148,7 +148,7 @@ DChart.HeapBar._drawgraphic = function (inner, graphicID, innerData, options) {
         };
         var height = (options.animateY ? animationDecimal : 1) * length;
         for (var i = 0; i < axisData.tuftCount; i++) {
-            var top = axisSize.startPos + axisSize.labelDistance * i - length / 2;
+            var top = axisSize.startPos - axisSize.labelDistance * i - length / 2;
             var tmpwidth = 0;
             var cutlines = [];
             var lastshapes = [];

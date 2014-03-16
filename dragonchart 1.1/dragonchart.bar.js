@@ -49,7 +49,7 @@ DChart.Bar = DChart.getCore().__extends({
         if (!options.animateY && !options.animateX) { options.animation = false; }
         inner.SetData(_data);
         inner._onStart();
-        inner.tempData.upturnAxis = true;
+        inner.tempData.invertAxis = true;
         inner.tempData.notAllowValueNegative = true;
         inner.shapes.bars = [];
         var axisData = inner._formatAxisData();
@@ -157,7 +157,7 @@ DChart.Bar = DChart.getCore().__extends({
                     for (var k = 0; k < values.length; k++) {
                         var val = values[k];
                         var cut = axisData.demanCount / 2 - i;
-                        var top = axisSize.startPos + axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
+                        var top = axisSize.startPos - axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
                         var width = getWidth(val);
                         var left = axisSize.minX;
                         if (percentAnimComplete >= 1) {
@@ -179,7 +179,7 @@ DChart.Bar = DChart.getCore().__extends({
                     }
                 }
                 else {
-                    var top = axisSize.startPos + axisSize.labelDistance * i - length / 2;
+                    var top = axisSize.startPos - axisSize.labelDistance * i - length / 2;
                     var width = getWidth(percentType ? item.percent : item.value);
                     var left = axisSize.minX;
                     var color = item.color || (options.bar.useSameColor ? 'rgba(69,114,167,1)' : colors[i % colors.length]);

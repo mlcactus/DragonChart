@@ -308,9 +308,10 @@ DChart.MultiRing = DChart.getCore().__extends({
                     if (ops.backcolor) {
                         inner.DrawFigures.createRectangleFill(shape.left, shape.top, shape.width, shape.height, ops.backcolor);
                     }
+                    var fontsize = ops.fontsize || (shape.length - 1);
                     var left = shape.left + (shape.floatright ? cutX + (ops.withlegend ? shape.length + cutX : 0) : shape.width - cutX);
-                    var top = shape.top + shape.length + cutY / 2;
-                    inner.DrawFigures.createText(shape.content, left, top, shape.floatright ? 'left' : 'right', null, ops.fontsize || (shape.length - 1), ops.fontfamily, ops.color);
+                    var top = shape.top + shape.length / 2 + fontsize / 2 + cutY / 2;
+                    inner.DrawFigures.createText(shape.content, left, top, shape.floatright ? 'left' : 'right', null, fontsize, ops.fontfamily, ops.color);
                     if (ops.borderwidth && ops.borderwidth > 0) {
                         inner.DrawFigures.createRectangleBorder(shape.left, shape.top, shape.width, shape.height, ops.borderwidth, ops.bordercolor);
                     }

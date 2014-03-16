@@ -13,7 +13,7 @@ DChart.Points = DChart.getCore().__extends({
     SetDefaultOptions: function () {
         this._resetSharedOpions();
         this.innerOptions = DChart.Methods.Extend(this.originalDefaultOptions, {
-            upturnAxis: false,
+            invertAxis: false,
             labelAxis: {
                 valueType: null,
                 content: function (val) {
@@ -82,8 +82,8 @@ DChart.Points = DChart.getCore().__extends({
         }
         inner.SetData(_data);
         inner._onStart();
-        var upturnAxis = options.upturnAxis;
-        inner.tempData.upturnAxis = upturnAxis;
+        var invertAxis = options.invertAxis;
+        inner.tempData.invertAxis = invertAxis;
         inner.tempData.recreateAssists = true;
         inner.shapes.nodes = [];
         inner.coordinates.nodes = [];
@@ -99,8 +99,8 @@ DChart.Points = DChart.getCore().__extends({
 
         var spotdistance = DChart.Methods.IsNumber(options.tip.spotdistance) && options.tip.spotdistance > 0 ? options.tip.spotdistance : 10;
         var alignlinecolor = options.alignline.linecolor || DChart.Const.Defaults.AlignLineColor;
-        var valueAxisLength = (upturnAxis ? axisSize.maxX - axisSize.minX : axisSize.maxY - axisSize.minY);
-        var labelAxisLength = (upturnAxis ? axisSize.maxY - axisSize.minY : axisSize.maxX - axisSize.minX);
+        var valueAxisLength = (invertAxis ? axisSize.maxX - axisSize.minX : axisSize.maxY - axisSize.minY);
+        var labelAxisLength = (invertAxis ? axisSize.maxY - axisSize.minY : axisSize.maxX - axisSize.minX);
         var nodelength = options.node.length || DChart.Methods.CapValue(labelAxisLength / 100, 10, 6);
 
         var nodeShape = function (index, centerX, centerY, length, data, color) {
@@ -187,10 +187,10 @@ DChart.Points = DChart.getCore().__extends({
                         lvalue = lValueType ? subitem[0] : k;
                         vvalue = lValueType ? subitem[1] : subitem;
                         vpercent = percentType ? dataitem.percent[k] : null;
-                        center1 = (upturnAxis ? axisSize.minY : axisSize.minX) + getLabelWidth(lvalue);
-                        center2 = upturnAxis ? axisSize.minX + getValueHeight(percentType ? vpercent : vvalue) : axisSize.maxY - getValueHeight(percentType ? vpercent : vvalue);
-                        drawnode(upturnAxis ? center2 : center1, upturnAxis ? center1 : center2, color, dataitem);
-                        addPointsShape(i, k, upturnAxis ? center2 : center1, upturnAxis ? center1 : center2, dataitem.nodelength || nodelength, color, vvalue, lvalue, text, vpercent, dataitem);
+                        center1 = (invertAxis ? axisSize.maxY - getLabelWidth(lvalue) : axisSize.minX + getLabelWidth(lvalue));
+                        center2 = invertAxis ? axisSize.minX + getValueHeight(percentType ? vpercent : vvalue) : axisSize.maxY - getValueHeight(percentType ? vpercent : vvalue);
+                        drawnode(invertAxis ? center2 : center1, invertAxis ? center1 : center2, color, dataitem);
+                        addPointsShape(i, k, invertAxis ? center2 : center1, invertAxis ? center1 : center2, dataitem.nodelength || nodelength, color, vvalue, lvalue, text, vpercent, dataitem);
                     }
                 }
             }
@@ -202,10 +202,10 @@ DChart.Points = DChart.getCore().__extends({
                     lvalue = lValueType ? subitem.value[0] : i;
                     vvalue = lValueType ? subitem.value[1] : subitem.value;
                     vpercent = percentType ? inner.innerData[i].percent : null;
-                    center1 = (upturnAxis ? axisSize.minY : axisSize.minX) + getLabelWidth(lvalue);
-                    center2 = upturnAxis ? axisSize.minX + getValueHeight(percentType ? vpercent : vvalue) : axisSize.maxY - getValueHeight(percentType ? vpercent : vvalue);
-                    drawnode(upturnAxis ? center2 : center1, upturnAxis ? center1 : center2, color, subitem);
-                    addPointsShape(-1, i, upturnAxis ? center2 : center1, upturnAxis ? center1 : center2, subitem.nodelength || nodelength, color, vvalue, lvalue, text, vpercent, subitem);
+                    center1 = invertAxis ? axisSize.maxY - getLabelWidth(lvalue) : axisSize.minX + getLabelWidth(lvalue);
+                    center2 = invertAxis ? axisSize.minX + getValueHeight(percentType ? vpercent : vvalue) : axisSize.maxY - getValueHeight(percentType ? vpercent : vvalue);
+                    drawnode(invertAxis ? center2 : center1, invertAxis ? center1 : center2, color, subitem);
+                    addPointsShape(-1, i, invertAxis ? center2 : center1, invertAxis ? center1 : center2, subitem.nodelength || nodelength, color, vvalue, lvalue, text, vpercent, subitem);
                 }
             }
         };
@@ -234,14 +234,16 @@ DChart.Points = DChart.getCore().__extends({
                 if (y <= axisSize.maxY && y >= axisSize.minY && x >= axisSize.minX && x <= axisSize.maxX) {
                     var index = -1;
                     var cut = labelAxisLength / (axisData.tuftCount - 1);
-                    var startDistance = (upturnAxis ? axisSize.minY : axisSize.minX);
-                    var referPos = (upturnAxis ? y : x);
+                    var startDistance = (invertAxis ? axisSize.maxY : axisSize.minX);
+                    var referPos = (invertAxis ? y : x);
                     for (var i = 1; i < axisData.tuftCount; i++) {
-                        var x1 = startDistance + (i - 1) * cut;
-                        var x2 = startDistance + i * cut;
+                        var x1 = startDistance + (invertAxis ? -i * cut : (i - 1) * cut);
+                        var x2 = startDistance + (invertAxis ? -(i - 1) * cut : i * cut);
                         if (x1 <= referPos && x2 >= referPos) {
-                            if (Math.abs(x1 - referPos) < spotdistance) { index = i - 1; loc = x1; }
-                            else if (Math.abs(x2 - referPos) < spotdistance) { index = i; loc = x2; }
+                            var distance1 = Math.abs(x1 - referPos);
+                            var distance2 = Math.abs(x2 - referPos);
+                            if (distance1 < spotdistance && distance1 <= distance2) { index = invertAxis ? i : i - 1; loc = x1; }
+                            else if (distance2 < spotdistance && distance2 <= distance1) { index = invertAxis ? i - 1 : i; loc = x2; }
                             break;
                         }
                     }
@@ -284,20 +286,18 @@ DChart.Points = DChart.getCore().__extends({
                     if (veryShape) {
                         veryShape.isHovered = true;
                         if (options.mouseoverChangeCursor) { inner.canvas.style.cursor = 'pointer'; }
-                        if (showByNode) {
-                            if (options.alignline.verticalline || options.alignline.horizontalline) {
-                                inner._createAssists(valids);
-                                inner._createScales(valids);
-                                redrawSegments();
-                            }
-                            if (options.alignline.verticalline) {
-                                inner.DrawFigures.createLine(veryShape.centerX, axisSize.minY, veryShape.centerX, axisSize.maxY + 1, 1, alignlinecolor);
-                            }
-                            if (options.alignline.horizontalline) {
-                                inner.DrawFigures.createLine(axisSize.minX, veryShape.centerY, axisSize.maxX, veryShape.centerY, 1, alignlinecolor);
-                            }
-                            if (veryShape.showTip && showByNode) { veryShape.showTip(); }
+                        if (options.alignline.verticalline || options.alignline.horizontalline) {
+                            inner._createAssists(valids);
+                            inner._createScales(valids);
+                            redrawSegments();
                         }
+                        if (options.alignline.verticalline) {
+                            inner.DrawFigures.createLine(veryShape.centerX, axisSize.minY, veryShape.centerX, axisSize.maxY + 1, 1, alignlinecolor);
+                        }
+                        if (options.alignline.horizontalline) {
+                            inner.DrawFigures.createLine(axisSize.minX, veryShape.centerY, axisSize.maxX, veryShape.centerY, 1, alignlinecolor);
+                        }
+                        if (veryShape.showTip && showByNode) { veryShape.showTip(); }
                         var mouseover = typeof veryShape.data.mouseover == 'function' ? veryShape.data.mouseover : (options.mouseover || null);
                         if (mouseover) {
                             mouseover(veryShape.data, e);
@@ -328,16 +328,16 @@ DChart.Points = DChart.getCore().__extends({
                                 if (shape.hideTip) { shape.hideTip(); }
                             }
                         }
-                        if (upturnAxis && options.alignline.horizontalline || !upturnAxis && options.alignline.verticalline) {
+                        if (invertAxis && options.alignline.horizontalline || !invertAxis && options.alignline.verticalline) {
                             inner._createAssists(valids);
                             inner._createScales(valids);
                             redrawSegments();
                         }
                         if (fixed.shapes.length) {
-                            if (!upturnAxis && options.alignline.verticalline) {
+                            if (!invertAxis && options.alignline.verticalline) {
                                 inner.DrawFigures.createLine(fixed.loc, axisSize.minY, fixed.loc, axisSize.maxY + 1, 1, alignlinecolor);
                             }
-                            if (upturnAxis && options.alignline.horizontalline) {
+                            if (invertAxis && options.alignline.horizontalline) {
                                 inner.DrawFigures.createLine(axisSize.minX, fixed.loc, axisSize.maxX, fixed.loc, 1, alignlinecolor);
                             }
                             if (options.tip.merge) {
@@ -351,7 +351,7 @@ DChart.Points = DChart.getCore().__extends({
                                             centerYSum += shape.centerY;
                                             centerXSum += shape.centerX;
                                         }
-                                        var centerX = centerXSum / fixed.shapes.length;
+                                        var centerX = centerXSum / fixed.shapes.length + 5;
                                         var centerY = centerYSum / fixed.shapes.length;
                                         mergeTip = inner._createTip(options.tip.content.call(options, data, true), centerX, centerY);
                                         inner._changeTip(mergeTip, null, centerY - mergeTip.clientHeight / 2 + 10);
@@ -387,7 +387,7 @@ DChart.Points = DChart.getCore().__extends({
     },
     _getCheckOptions: function () {
         return {
-            __top: [['upturnAxis', 'b']],
+            __top: [['invertAxis', 'b']],
             labelAxis: [['valueType', 's'], ['content', 'f'], ['minvalue', 'n'], ['maxvalue', 'n'], ['interval', 'n'], ['sort', 'b']],
             node: [['colors', 'ca'], ['nodetype', 's'], ['linecolor', 'c'], ['linewidth', 'n'], ['length', 'n'], ['fillcolor', 'c']],
             tip: [['merge', 'b'], ['spotdistance', 'n']],

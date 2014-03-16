@@ -82,7 +82,7 @@ DChart.RangeBar._drawgraphic = function (inner, graphicID, innerData, options) {
         throw new Error(inner._messages.WrongParam + inner._messages.ValueTypeMustNotBePercent);
     }
     if (graphicID == inner.ID) {
-        inner._configs.upturnAxis = true;
+        inner._configs.invertAxis = true;
         inner._configs.valueAxiaDataIsRange = true;
     }
 
@@ -109,6 +109,9 @@ DChart.RangeBar._drawgraphic = function (inner, graphicID, innerData, options) {
         else {
             gap = axisSize.labelDistance / 20;
         }
+    }
+    else {
+        gap = 0;
     }
     if (length && length > 0) {
         var maxLen = axisData.multiple ? ((axisSize.labelDistance - (axisData.demanCount + 1) * gap) / axisData.demanCount) : axisSize.labelDistance * 0.8;
@@ -212,7 +215,7 @@ DChart.RangeBar._drawgraphic = function (inner, graphicID, innerData, options) {
                 for (var k = 0; k < values.length; k++) {
                     var val = values[k];
                     var cut = axisData.demanCount / 2 - i;
-                    var top = axisSize.startPos + axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
+                    var top = axisSize.startPos - axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
                     var width = getDiffWidth(val[0], val[1], true);
                     var left = axisSize.minX + getDiffWidth(axisData.vMinValue, Math.min(val[0], val[1]));
                     if (percentAnimComplete >= 1) {
@@ -234,7 +237,7 @@ DChart.RangeBar._drawgraphic = function (inner, graphicID, innerData, options) {
                 }
             }
             else {
-                var top = axisSize.startPos + axisSize.labelDistance * i - length / 2;
+                var top = axisSize.startPos - axisSize.labelDistance * i - length / 2;
                 var val = percentType ? item.percent : item.value;
                 var width = getDiffWidth(val[0], val[1], true);
                 var left = axisSize.minX + getDiffWidth(axisData.vMinValue, Math.min(val[0], val[1]));

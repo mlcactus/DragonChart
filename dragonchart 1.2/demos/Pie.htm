@@ -1,7 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>DChart入门教程Demo-Pie</title>
+    <title>DragonChart入门教程Demo-Pie</title>
+
+    <script type="text/javascript" src="../excanvas.js"></script>
 
     <script type="text/javascript" src="../dragonchart.core.js"></script>
 
@@ -23,9 +25,10 @@
                 { text: 'Others', value: 20.401 }
             ];
             var options = {
+                animation: false,
                 title: { content: 'Programming Language Ranking List in January 2013.' },
                 subTitle: { content: 'Here\'s Top Ten Languages.' },
-                legend: { sidelength: 10, fontsize: 13 },
+                legend: { sidelength: 10, fontsize: 13, enablecontrol: true, type: 'row', placeY: 'top' },
                 tip: { content: function(data) { return '<div>' + data.text + '<br/>value：' + data.value.toString() + '<br/>percent：' + data.percent.toFixed(3) + '%</div>'; } }
             };
 

@@ -56,9 +56,6 @@ DChart.QueueHistogram._drawgraphic = function (inner, graphicID, innerData, opti
     var computeSplitPoint = splitpoint == null;
     if (graphicID == inner.ID) { inner._configs.computeSplitPoint = computeSplitPoint; }
     var axisData = inner._formatAxisData();
-    if (!computeSplitPoint && (axisData.vValueType == 'd' || axisData.vValueType == 't') && !DChart.Methods.IsDate(splitpoint)) {
-        splitpoint = DChart.Methods.ParseDate(splitpoint.toString());
-    }
     if (computeSplitPoint) { splitpoint = axisData.splitpoint; }
     else { axisData.splitpoint = splitpoint; }
     if (innerData.length > 1 && (splitpoint >= axisData.vMaxval || splitpoint <= axisData.vMinval)) { throw new Error(inner._messages.WrongSet + inner._messages.WrongSplitPoint); }
@@ -87,6 +84,9 @@ DChart.QueueHistogram._drawgraphic = function (inner, graphicID, innerData, opti
         else {
             gap = axisSize.labelDistance / 20;
         }
+    }
+    else {
+        gap = 0;
     }
     if (length && length > 0) {
         var maxLen = multiple ? ((axisSize.labelDistance - (demanCount + 1) * gap) / demanCount) : axisSize.labelDistance * 0.8;
@@ -151,6 +151,9 @@ DChart.QueueHistogram._drawgraphic = function (inner, graphicID, innerData, opti
                     var left = this.left + this.width / 2 + 5;
                     var top = this.top + this.height / 2;
                     this.tip = inner._createTip(options.tip.content.call(options, this.data), left, top);
+                    if (left + this.tip.clientWidth > axisSize.maxX) {
+                        inner._changeTip(this.tip, left - this.width / 2 - this.tip.clientWidth);
+                    }
                     var shape = this;
                     shape.tip.onclick = function (e) { shape.click(e); };
                 }

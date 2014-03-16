@@ -101,7 +101,13 @@ DChart.Polar3D._drawgraphic = function (inner, graphicID, innerData, options) {
     var cutX = 3; var cutY = 3;
     var zoomX = options.reflection3d.zoomX || 1.2;
     var zoomY = options.reflection3d.zoomY || 0.9;
+    if (inner._configs._isIE678.isIE678) {
+        zoomX = 1; zoomY = 1;
+    }
     var radiusInfo = inner._computeRadiusForPies(options, zoomX, zoomY);
+    if (inner._configs._isIE678.isIE678) {
+        radiusInfo.maxRadius *= 0.9;
+    }
     var colors = (options.colors && options.colors.length > 0 ? options.colors : null) || DChart.Const.Defaults.FillColors;
     var isMain = graphicID == inner.ID;
     if (isMain) {
@@ -144,7 +150,7 @@ DChart.Polar3D._drawgraphic = function (inner, graphicID, innerData, options) {
         };
     };
 
-    var pieshape = function (index, color, radius, percent, angleMin, angleMax, midAngle, isLeft, isBottom, data) {
+    var pieshape = function (index, color, radius, percent, angleMin, angleMax, midAngle, data) {
         this.index = index;
         this.color = color;
         this.radius = radius;
@@ -152,8 +158,6 @@ DChart.Polar3D._drawgraphic = function (inner, graphicID, innerData, options) {
         this.angleMin = angleMin;
         this.angleMax = angleMax;
         this.midAngle = midAngle;
-        this.isLeft = isLeft;
-        this.isBottom = isBottom;
         this.isHovered = false;
         this.data = data;
         this.redraw = function (color) {
@@ -284,7 +288,7 @@ DChart.Polar3D._drawgraphic = function (inner, graphicID, innerData, options) {
         }
         var opsStaff = options.staff;
         var content = opsStaff.content;
-        if (!opsStaff.show || typeof content != 'function' || !(opsStaff.directions.length > 0)) { return; }
+        if (!opsStaff.show || typeof content != 'function' || opsStaff.directions == null || !(opsStaff.directions.length > 0)) { return; }
         var fontsize = opsStaff.fontsize || polarRadius / scaleData.scalecount * 0.6;
         var backcolor = opsStaff.backcolor;
         var maxLength = 0;
@@ -388,9 +392,10 @@ DChart.Polar3D._drawgraphic = function (inner, graphicID, innerData, options) {
                 if (ops.backcolor) {
                     inner.DrawFigures.createRectangleFill(shape.left, shape.top, shape.width, shape.height, ops.backcolor);
                 }
+                var fontsize = ops.fontsize || (shape.length - 1);
                 var left = shape.left + (shape.floatright ? cutX + (ops.withlegend ? shape.length + cutX : 0) : shape.width - cutX);
-                var top = shape.top + shape.length + cutY / 2;
-                inner.DrawFigures.createText(shape.content, left, top, shape.floatright ? 'left' : 'right', null, ops.fontsize || (shape.length - 1), ops.fontfamily, ops.color);
+                var top = shape.top + shape.length / 2 + fontsize / 2 + cutY / 2;
+                inner.DrawFigures.createText(shape.content, left, top, shape.floatright ? 'left' : 'right', null, fontsize, ops.fontfamily, ops.color);
                 if (ops.borderwidth && ops.borderwidth > 0) {
                     inner.DrawFigures.createRectangleBorder(shape.left, shape.top, shape.width, shape.height, ops.borderwidth, ops.bordercolor);
                 }
@@ -430,32 +435,18 @@ DChart.Polar3D._drawgraphic = function (inner, graphicID, innerData, options) {
         var pieshapes = [];
         for (var i = 0, item; item = innerData[i]; i++) {
             var percent = (item.value / segmentInfo.segmentTotal) * 100;
-            var rotate = percent / 100 * Math.PI * 2 * rotateAnimation;
+            var rotate = rotateAnimation * Math.PI * 2 * (options.averageAngle ? 1 / cemicircleCount : (percent / 100));
             var color = item.color || colors[i % colors.length];
             var angleMin = cumulativeAngle;
             var angleMax = cumulativeAngle + rotate;
             var midAngle = (angleMin + angleMax) / 2;
-            var isLeft = DChart.Methods.JudgeBetweenAngle(-Math.PI * 0.5, Math.PI * 0.5, midAngle);
-            var isBottom = DChart.Methods.JudgeBetweenAngle(angleMin, angleMax, Math.PI / 2);
             if (complete) { item.percent = percent; }
-            var _pieshape = new pieshape(i, color, polarRadius * scaleAnimation * getPartPercent(item.value), percent, angleMin, angleMax, midAngle, isLeft, isBottom, item);
+            var _pieshape = new pieshape(i, color, polarRadius * scaleAnimation * getPartPercent(item.value), percent, angleMin, angleMax, midAngle, item);
+            inner._methodsFor3D.computeLoc(_pieshape);
             pieshapes.push(_pieshape);
             cumulativeAngle += rotate;
         }
-        pieshapes.sort(function (shapeitem0, shapeitem1) {
-            if (shapeitem0.isBottom) { return 1; }
-            else if (shapeitem1.isBottom) { return -1; }
-            else {
-                if (shapeitem0.isLeft == shapeitem1.isLeft) {
-                    if (shapeitem0.isLeft) { return shapeitem0.midAngle < shapeitem1.midAngle ? -1 : 1; }
-                    else { return shapeitem0.midAngle < shapeitem1.midAngle ? 1 : -1; }
-                }
-                else {
-                    if (shapeitem0.isLeft) { return -1; }
-                    else { return 1; }
-                }
-            }
-        });
+        pieshapes.sort(inner._methodsFor3D.pieshapeSort);
         var drawReflection = function (shapeitem, type, data, pieshape) {
             drawPart(type, shapeitem.radius, shapeitem.angleMin, shapeitem.angleMax, shapeitem.color, false, shapeitem.data.darksidecolor, complete && type == 3 ? shapeitem.data : null, complete && type == 3 ? shapeitem : null);
         };

@@ -55,7 +55,7 @@ DChart.HeapBar = DChart.getCore().__extends({
             throw new Error(wrongmsg.WrongData + wrongmsg.DataMustBeMultipleArray);
         }
         inner._onStart();
-        inner.tempData.upturnAxis = true;
+        inner.tempData.invertAxis = true;
         inner.tempData.notAllowValueNegative = true;
         var axisData = inner._formatAxisData(true);
         var valids = inner._calculateOutersValid();

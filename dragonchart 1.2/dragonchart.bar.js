@@ -46,7 +46,7 @@ DChart.Bar._getCheckOptions = function () {
 };
 DChart.Bar._drawgraphic = function (inner, graphicID, innerData, options) {
     if (graphicID == inner.ID) {
-        inner._configs.upturnAxis = true;
+        inner._configs.invertAxis = true;
         inner._configs.notAllowValueNegative = true;
     }
     var axisData = inner._formatAxisData();
@@ -74,6 +74,9 @@ DChart.Bar._drawgraphic = function (inner, graphicID, innerData, options) {
             gap = axisSize.labelDistance / 20;
         }
     }
+    else {
+        gap = 0;
+    }
     if (length && length > 0) {
         var maxLen = axisData.multiple ? ((axisSize.labelDistance - (axisData.demanCount + 1) * gap) / axisData.demanCount) : axisSize.labelDistance * 0.8;
         length = Math.min(length, maxLen);
@@ -84,10 +87,10 @@ DChart.Bar._drawgraphic = function (inner, graphicID, innerData, options) {
     var getBarTop = function (i, k) {
         if (k != undefined) {
             var cut = axisData.demanCount / 2 - i;
-            return axisSize.startPos + axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
+            return axisSize.startPos - axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
         }
         else {
-            return axisSize.startPos + axisSize.labelDistance * i - length / 2
+            return axisSize.startPos - axisSize.labelDistance * i - length / 2
         }
     };
     var colors = (options.bar.colors && options.bar.colors.length > 0 ? options.bar.colors : null) || DChart.Const.Defaults.FillColors;

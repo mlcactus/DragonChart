@@ -54,11 +54,8 @@ DChart.QueueBar._drawgraphic = function (inner, graphicID, innerData, options) {
     }
     var splitpoint = options.splitpoint;
     var computeSplitPoint = splitpoint == null;
-    if (graphicID == inner.ID) { inner._configs.computeSplitPoint = computeSplitPoint; inner._configs.upturnAxis = true; }
+    if (graphicID == inner.ID) { inner._configs.computeSplitPoint = computeSplitPoint; inner._configs.invertAxis = true; }
     var axisData = inner._formatAxisData();
-    if (!computeSplitPoint && (axisData.vValueType == 'd' || axisData.vValueType == 't') && !DChart.Methods.IsDate(splitpoint)) {
-        splitpoint = DChart.Methods.ParseDate(splitpoint.toString());
-    }
     if (computeSplitPoint) { splitpoint = axisData.splitpoint; }
     else { axisData.splitpoint = splitpoint; }
     if (innerData.length > 1 && (splitpoint >= axisData.vMaxval || splitpoint <= axisData.vMinval)) { throw new Error(inner._messages.WrongSet + inner._messages.WrongSplitPoint); }
@@ -81,17 +78,20 @@ DChart.QueueBar._drawgraphic = function (inner, graphicID, innerData, options) {
     var length = options.bar.length;
     var multiple = demanCount > 1;
     if (multiple) {
-        if (_gap && _gap > 0) {
+        if (gap && gap > 0) {
             var maxGap = (axisSize.labelDistance - demanCount * 2) / (demanCount + 1);
-            gap = Math.min(_gap, maxGap);
+            gap = Math.min(gap, maxGap);
         }
         else {
             gap = axisSize.labelDistance / 20;
         }
     }
+    else {
+        gap = 0;
+    }
     if (length && length > 0) {
         var maxLen = multiple ? ((axisSize.labelDistance - (demanCount + 1) * gap) / demanCount) : axisSize.labelDistance * 0.8;
-        length = Math.min(_length, maxLen);
+        length = Math.min(length, maxLen);
     }
     else {
         length = (axisSize.labelDistance - (demanCount + 1) * gap) / (multiple ? (demanCount + 0.5) : 1.5);
@@ -175,7 +175,7 @@ DChart.QueueBar._drawgraphic = function (inner, graphicID, innerData, options) {
                 var val = item.value[k];
                 var isSmall = val < splitpoint;
                 var cut = demanCount / 2 - (contrastmode ? parseInt(i / 2) : i);
-                var top = axisSize.startPos + axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
+                var top = axisSize.startPos - axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
                 var width = getWidth(val);
                 var left = isSmall ? axisSize.splitLinePos - width : axisSize.splitLinePos;
                 if (percentAnimComplete >= 1) {
