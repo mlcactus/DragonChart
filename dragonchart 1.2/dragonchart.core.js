@@ -813,6 +813,7 @@ DChart.getCore = function () {
             inner._configs.pluginZIndex = 0;
             inner._configs.cursorPointer = false;
             inner.plugins = [];
+            inner.customDraws = [];
             inner._configs.eventlisteners = { click: [], mousemove: [] };
             inner.SetDefaultOptions();
             inner.ClearBackGround();
@@ -1378,7 +1379,7 @@ DChart.getCore = function () {
             }
             return inner;
         };
-        inner.ClearPlugin = function () {
+        inner.ClearPlugins = function () {
             if (inner.plugins.length > 0) {
                 inner.plugins.length = 0;
                 var tmpOptionsBackup = { mainOptions: inner._configs.optionsBackup.mainOptions };
@@ -1497,6 +1498,9 @@ DChart.getCore = function () {
                 if (options.scaleOverlay) {
                     inner._createScales(valids, false, true);
                 }
+                for (var i = 0, customdraw; customdraw = inner.customDraws[i]; i++) {
+                    inner.DrawFigures[customdraw.funcname].apply(inner, customdraw.options);
+                }
                 if (percentAnimComplete < 1) {
                     requestAnimationFrame(animLoop);
                 }
@@ -1515,6 +1519,9 @@ DChart.getCore = function () {
                         }
                         if (options.scaleOverlay) {
                             inner._createScales(valids, false, true);
+                        }
+                        for (var i = 0, customdraw; customdraw = inner.customDraws[i]; i++) {
+                            inner.DrawFigures[customdraw.funcname].apply(inner, customdraw.options);
                         }
                     };
                     for (var i = 0, task; task = tasks[i]; i++) {
@@ -2664,6 +2671,15 @@ DChart.getCore = function () {
             }
         };
         inner.DrawFigures = {};
+        inner._addCustomDraw = function (type, ops) {
+            inner.customDraws.push({ funcname: type, options: ops });
+        };
+        inner.ClearCustomDraws = function (redraw) {
+            inner.customDraws.length = 0;
+            if (redraw) {
+                inner.redrawAll();
+            }
+        };
         inner.DrawFigures.createPointElement = function (type, X, Y, length, fillcolor, fill, strokecolor, linewidth, stroke, middle) {
             if (arguments.length < 5) { return; }
             if (fill == null) { fill = true; }
@@ -2720,6 +2736,9 @@ DChart.getCore = function () {
             }
             ctx.restore();
         };
+        inner.createPoint = function (type, X, Y, length, fillcolor, fill, strokecolor, linewidth, stroke, middle) {
+            inner._addCustomDraw('createPointElement', [type, X, Y, length, fillcolor, fill, strokecolor, linewidth, stroke, middle]);
+        }
         inner.DrawFigures.createArc = function (centerX, centerY, radius, linewidth, linecolor, fillcolor, angleMin, angleMax, linkCenter) {
             if (arguments.length < 4) { return; }
             var ctx = inner.ctx;
@@ -2743,6 +2762,9 @@ DChart.getCore = function () {
             }
             ctx.restore();
         };
+        inner.createArc = function (centerX, centerY, radius, linewidth, linecolor, fillcolor, angleMin, angleMax, linkCenter) {
+            inner._addCustomDraw('createArc', [centerX, centerY, radius, linewidth, linecolor, fillcolor, angleMin, angleMax, linkCenter]);
+        }
         inner.DrawFigures.createRing = function (centerX, centerY, innerRadius, outerRadius, fillcolor, angleMin, angleMax, linewidth, linecolor) {
             var ctx = inner.ctx;
             ctx.save();
@@ -2761,6 +2783,9 @@ DChart.getCore = function () {
             }
             ctx.restore();
         };
+        inner.createRing = function (centerX, centerY, innerRadius, outerRadius, fillcolor, angleMin, angleMax, linewidth, linecolor) {
+            inner._addCustomDraw('createRing', [centerX, centerY, innerRadius, outerRadius, fillcolor, angleMin, angleMax, linewidth, linecolor]);
+        }
         inner.DrawFigures.createRingReflection = function (computeinfo, fillcolor, linewidth, linecolor, preventinnerLine, preventouterLine) {
             var ctx = inner.ctx;
 
@@ -2828,6 +2853,9 @@ DChart.getCore = function () {
             ctx.restore();
             return textWidth;
         };
+        inner.createText = function (content, x, y, textAlign, fontweight, fontsize, fontfamily, color, fontrotate, reference) {
+            inner._addCustomDraw('createText', [content, x, y, textAlign, fontweight, fontsize, fontfamily, color, fontrotate, reference]);
+        }
         inner.DrawFigures.createRectangleFill = function (left, top, width, height, fillstyle, shadow) {
             if (width <= 0 || height <= 0) { return; }
             var ctx = inner.ctx;
@@ -2842,6 +2870,9 @@ DChart.getCore = function () {
             ctx.fillRect(left, top, width, height);
             ctx.restore();
         };
+        inner.createRect = function (left, top, width, height, fillstyle, shadow) {
+            inner._addCustomDraw('createRectangleFill', [left, top, width, height, fillstyle, shadow]);
+        }
         inner.DrawFigures.createRectangleBorder = function (left, top, width, height, borderwidth, bordercolor) {
             var ctx = inner.ctx;
             ctx.save();
@@ -2871,6 +2902,9 @@ DChart.getCore = function () {
             ctx.stroke();
             ctx.restore();
         };
+        inner.createLine = function (startX, startY, endX, endY, linewidth, linecolor) {
+            inner._addCustomDraw('createLine', [startX, startY, endX, endY, linewidth, linecolor]);
+        }
         inner.DrawFigures.createQuadraticCurve = function (startX, startY, controlX, controlY, endX, endY, linewidth, linecolor) {
             var linewidth = Math.ceil(linewidth);
             var ctx = inner.ctx;
