@@ -267,7 +267,7 @@ DChart.Methods = {
         var res = num;
         for (var i = 0; i < 8; i++) {
             var tmp = parseFloat(num.toFixed(i));
-            if (Math.abs(tmp - num) < 0.00001) { res = tmp; break; }
+            if (Math.abs(tmp - num) < 0.0000001) { res = tmp; break; }
         }
         return res;
     },
@@ -1206,6 +1206,17 @@ DChart.getCore = function () {
                 inner._configs.optionsBackup.mainOptions = inner.innerOptions;
             }
             return inner;
+        };
+        inner.getCoordinate = function (location) {
+            var coors = inner.coordinates;
+            if (typeof location != 'string') { return coors; }
+            else {
+                var splits = location.replace(DChart.Const.RegExps.BlankCharacter, '').split(".");
+                for (var i = 0, item; item = splits[i]; i++) {
+                    if (coors) { coors = coors[item]; }
+                }
+                return coors;
+            }
         };
         inner._checkOptions = function () {
             var _checkOption = function (name, val, type) {
@@ -2191,7 +2202,7 @@ DChart.getCore = function () {
                 var valueAxisContent = options.valueAxis.content;
                 var tmpMinValue = DChart.Methods.CopyInnerValue(axisData.vValueType, axisData.vMinValue);
                 for (var i = 0; i <= axisData.vScalecount; i++) {
-                    labels[i] = valueAxisContent.call(options, DChart.Methods.AddInnerValue(axisData.vValueType, tmpMinValue, axisData.vInterval * i));
+                    labels[i] = valueAxisContent.call(options, DChart.Methods.FormatNumber(DChart.Methods.AddInnerValue(axisData.vValueType, tmpMinValue, axisData.vInterval * i)));
                     tmpMinValue = DChart.Methods.CopyInnerValue(axisData.vValueType, axisData.vMinValue);
                 }
                 return labels;
@@ -2204,7 +2215,7 @@ DChart.getCore = function () {
                     if (typeof content == 'function') {
                         var tmpMinValue = DChart.Methods.CopyInnerValue(axisData.lValueType, axisData.lMinValue);
                         for (var i = 0; i <= axisData.lScalecount; i++) {
-                            labels[i] = content.call(options.labelAxis, DChart.Methods.AddInnerValue(axisData.lValueType, tmpMinValue, axisData.lInterval * i));
+                            labels[i] = content.call(options.labelAxis, DChart.Methods.FormatNumber(DChart.Methods.AddInnerValue(axisData.lValueType, tmpMinValue, axisData.lInterval * i)));
                             tmpMinValue = DChart.Methods.CopyInnerValue(axisData.lValueType, axisData.lMinValue);
                         }
                     }
@@ -2672,13 +2683,26 @@ DChart.getCore = function () {
         };
         inner.DrawFigures = {};
         inner._addCustomDraw = function (type, ops) {
-            inner.customDraws.push({ funcname: type, options: ops });
+            var customdrawID = 'CustomDraw_' + DChart.Methods.GetRandomString();
+            inner.customDraws.push({ customdrawID: customdrawID, funcname: type, options: ops });
+            return customdrawID;
         };
-        inner.ClearCustomDraws = function (redraw) {
-            inner.customDraws.length = 0;
-            if (redraw) {
-                inner.redrawAll();
+        inner.RemoveCustomDraw = function (customdrawID) {
+            var customDraws = inner.customDraws, find = false;;
+            for (var i = 0, n = 0; i < customDraws.length; i++) {
+                if (customDraws[i].customdrawID != customdrawID) {
+                    customDraws[n++] = customDraws[i];
+                }
+                else {
+                    find = true;
+                }
             }
+            if (find) {
+                customDraws.length -= 1;
+            }
+        };
+        inner.ClearCustomDraws = function () {
+            inner.customDraws.length = 0;
         };
         inner.DrawFigures.createPointElement = function (type, X, Y, length, fillcolor, fill, strokecolor, linewidth, stroke, middle) {
             if (arguments.length < 5) { return; }
@@ -2737,7 +2761,7 @@ DChart.getCore = function () {
             ctx.restore();
         };
         inner.createPoint = function (type, X, Y, length, fillcolor, fill, strokecolor, linewidth, stroke, middle) {
-            inner._addCustomDraw('createPointElement', [type, X, Y, length, fillcolor, fill, strokecolor, linewidth, stroke, middle]);
+            return inner._addCustomDraw('createPointElement', [type, X, Y, length, fillcolor, fill, strokecolor, linewidth, stroke, middle]);
         };
         inner.DrawFigures.createArc = function (centerX, centerY, radius, linewidth, linecolor, fillcolor, angleMin, angleMax, linkCenter) {
             if (arguments.length < 4) { return; }
@@ -2763,7 +2787,7 @@ DChart.getCore = function () {
             ctx.restore();
         };
         inner.createArc = function (centerX, centerY, radius, linewidth, linecolor, fillcolor, angleMin, angleMax, linkCenter) {
-            inner._addCustomDraw('createArc', [centerX, centerY, radius, linewidth, linecolor, fillcolor, angleMin, angleMax, linkCenter]);
+            return inner._addCustomDraw('createArc', [centerX, centerY, radius, linewidth, linecolor, fillcolor, angleMin, angleMax, linkCenter]);
         };
         inner.DrawFigures.createRing = function (centerX, centerY, innerRadius, outerRadius, fillcolor, angleMin, angleMax, linewidth, linecolor) {
             var ctx = inner.ctx;
@@ -2784,7 +2808,7 @@ DChart.getCore = function () {
             ctx.restore();
         };
         inner.createRing = function (centerX, centerY, innerRadius, outerRadius, fillcolor, angleMin, angleMax, linewidth, linecolor) {
-            inner._addCustomDraw('createRing', [centerX, centerY, innerRadius, outerRadius, fillcolor, angleMin, angleMax, linewidth, linecolor]);
+            return inner._addCustomDraw('createRing', [centerX, centerY, innerRadius, outerRadius, fillcolor, angleMin, angleMax, linewidth, linecolor]);
         };
         inner.DrawFigures.createRingReflection = function (computeinfo, fillcolor, linewidth, linecolor, preventinnerLine, preventouterLine) {
             var ctx = inner.ctx;
@@ -2854,7 +2878,7 @@ DChart.getCore = function () {
             return textWidth;
         };
         inner.createText = function (content, x, y, textAlign, fontweight, fontsize, fontfamily, color, fontrotate, reference) {
-            inner._addCustomDraw('createText', [content, x, y, textAlign, fontweight, fontsize, fontfamily, color, fontrotate, reference]);
+            return inner._addCustomDraw('createText', [content, x, y, textAlign, fontweight, fontsize, fontfamily, color, fontrotate, reference]);
         };
         inner.DrawFigures.createRectangleFill = function (left, top, width, height, fillstyle, shadow) {
             if (width <= 0 || height <= 0) { return; }
@@ -2871,7 +2895,7 @@ DChart.getCore = function () {
             ctx.restore();
         };
         inner.createRect = function (left, top, width, height, fillstyle, shadow) {
-            inner._addCustomDraw('createRectangleFill', [left, top, width, height, fillstyle, shadow]);
+            return inner._addCustomDraw('createRectangleFill', [left, top, width, height, fillstyle, shadow]);
         };
         inner.DrawFigures.createRectangleBorder = function (left, top, width, height, borderwidth, bordercolor) {
             var ctx = inner.ctx;
@@ -2903,7 +2927,7 @@ DChart.getCore = function () {
             ctx.restore();
         };
         inner.createLine = function (startX, startY, endX, endY, linewidth, linecolor) {
-            inner._addCustomDraw('createLine', [startX, startY, endX, endY, linewidth, linecolor]);
+            return inner._addCustomDraw('createLine', [startX, startY, endX, endY, linewidth, linecolor]);
         };
         inner.DrawFigures.createQuadraticCurve = function (startX, startY, controlX, controlY, endX, endY, linewidth, linecolor) {
             var linewidth = Math.ceil(linewidth);
