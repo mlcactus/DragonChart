@@ -95,8 +95,10 @@ DChart.Line._drawgraphic = function (inner, graphicID, innerData, options) {
             throw new Error(inner._messages.WrongParam + inner._messages.LabelAxisValueTypeCannotBePercent);
         }
     }
-
     var axisData = inner._formatAxisData();
+    if (axisData.tuftCount < 2) {
+        throw new Error(inner._messages.WrongData + inner._messages.NeedLeastTwoPoints);
+    }
     var valids = inner._calculateOutersValid();
     var axisSize = inner._computeAxis(valids);
     var coordinate = inner._getDrawableCoordinate();
@@ -180,7 +182,7 @@ DChart.Line._drawgraphic = function (inner, graphicID, innerData, options) {
             }
             else {
                 if (axisData.multiple) {
-                    return labelAxisLength * val / (innerData[0].value.length - 1);
+                    return labelAxisLength * val / (axisData.tuftCount - 1);
                 }
                 else {
                     if (lineIsMain) { return labelAxisLength * val / (innerData.length - 1); }

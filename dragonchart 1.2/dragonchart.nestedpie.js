@@ -31,11 +31,11 @@ DChart.NestedPie._getDefaultOptions = function (originalCommonOptions) {
         animateRotate: true,
         animateScale: true,
         startAngle: null,
-                subitems: {
-                        outerlabalpoint: null,
-                        innerlabalpoint: null,
-                        inheritevents: true,
-                        showinnerlabels: false
+        subitems: {
+            outerlabalpoint: null,
+            innerlabalpoint: null,
+            inheritevents: true,
+            showinnerlabels: false
         },
         separateLine: {
             color: null,
@@ -88,17 +88,17 @@ DChart.NestedPie._drawgraphic = function (inner, graphicID, innerData, options) 
     var isMain = graphicID == inner.ID;
     var colors = (options.colors && options.colors.length > 0 ? options.colors : null) || DChart.Const.Defaults.FillColors;
     if (isMain) {
-                inner.coordinates.draw = radiusInfo.coordinate;
+        inner.coordinates.draw = radiusInfo.coordinate;
         inner._configs.legendColors = colors;
     }
     if (!inner.coordinates.nestedpie) { inner.coordinates.nestedpie = {}; }
     inner.coordinates.nestedpie[graphicID] = { outerRadius: pieOuterRadius, innerRadius: pieInnerRadius, centerX: radiusInfo.centerX, centerY: radiusInfo.centerY, cemicircles: [], outerlabels: [] };
     inner.shapes[graphicID] = { cemicircles: [], outerlabels: [] };
     var shapes = inner.shapes[graphicID];
-        var allTotal = 0;
-        var subTotals = [];
-        var hasSubs = [];
-        var subvalues = [];
+    var allTotal = 0;
+    var subTotals = [];
+    var hasSubs = [];
+    var subvalues = [];
     for (var i = 0, item; item = innerData[i]; i++) {
         var tmpVal = item.value;
         if (typeof tmpVal != 'number' || tmpVal < 0) {
@@ -107,7 +107,7 @@ DChart.NestedPie._drawgraphic = function (inner, graphicID, innerData, options) 
         allTotal += tmpVal;
         subTotals[i] = tmpVal;
         var subitems = item.subitems;
-                if (DChart.Methods.IsArray(subitems)) {
+        if (DChart.Methods.IsArray(subitems)) {
             hasSubs[i] = true;
             var subTotal = 0;
             for (var j = 0, subitem; subitem = subitems[j]; j++) {
@@ -131,7 +131,7 @@ DChart.NestedPie._drawgraphic = function (inner, graphicID, innerData, options) 
     var specificConfig = inner._configs.specificConfig[graphicID];
     var outerlabalpoint = options.subitems.outerlabalpoint;
     var innerlabalpoint = options.subitems.innerlabalpoint;
-        if (outerlabalpoint == null || innerlabalpoint == null) {
+    if (outerlabalpoint == null || innerlabalpoint == null) {
         if (subvalues.length > 8) {
             subvalues.sort(function (x, y) { return y - x; });
             var pointvalue = subvalues[8];
@@ -148,7 +148,7 @@ DChart.NestedPie._drawgraphic = function (inner, graphicID, innerData, options) 
         this.angleMax = angleMax;
         this.data = data;
         this.isHovered = false;
-                this.isInnerPie = function () {
+        this.isInnerPie = function () {
             return this.indexY == null;
         };
         this.color = function () {
@@ -157,8 +157,8 @@ DChart.NestedPie._drawgraphic = function (inner, graphicID, innerData, options) 
         this.redraw = function (color) {
             drawPart(1, !this.isInnerPie(), this.angleMin, this.angleMax, color || this.color());
         };
-                this.contact = null;
-                this.superShape = null;
+        this.contact = null;
+        this.superShape = null;
         this.click = function (e, data) {
             var click = typeof this.data.click == 'function' ? this.data.click : (options.click || null);
             if (click) {
@@ -247,13 +247,13 @@ DChart.NestedPie._drawgraphic = function (inner, graphicID, innerData, options) 
         var separateLineWidth = options.separateLine.width || 1;
         var linecolor = options.separateLine.color;
         if (isSubitem) {
-                        inner.DrawFigures.createRing(centerX, centerY, pieInnerRadius * scalePercent, pieOuterRadius * scalePercent, color, angleMin, angleMax, separateLineWidth, linecolor);
+            inner.DrawFigures.createRing(centerX, centerY, pieInnerRadius * scalePercent, pieOuterRadius * scalePercent, color, angleMin, angleMax, separateLineWidth, linecolor);
         }
         else {
-                        inner.DrawFigures.createArc(centerX, centerY, pieInnerRadius * scalePercent, separateLineWidth, linecolor, color, angleMin, angleMax, true);
+            inner.DrawFigures.createArc(centerX, centerY, pieInnerRadius * scalePercent, separateLineWidth, linecolor, color, angleMin, angleMax, true);
         }
         var ops = options.outerLabel;
-                if (data && ops.show && typeof ops.content == 'function' && (isSubitem && (outerlabalpoint == null || data.value > outerlabalpoint) || !hasSubs[data.indexX])) {
+        if (data && ops.show && typeof ops.content == 'function' && (isSubitem && (outerlabalpoint == null || data.value > outerlabalpoint) || !hasSubs[data.indexX])) {
             var length = ops.length || pieOuterRadius / 12;
             var floatright = DChart.Methods.JudgeBetweenAngle(-Math.PI * 0.5, Math.PI * 0.5, midAngle);
             var floattop = DChart.Methods.JudgeBetweenAngle(-Math.PI, 0, midAngle);
@@ -271,8 +271,8 @@ DChart.NestedPie._drawgraphic = function (inner, graphicID, innerData, options) 
         if (!(ops.show && typeof ops.content == 'function')) { return; }
         var distance = ops.distance || 0.5;
         var drawSingleLabel = function (shape) {
-                        var drawInner = shape.isInnerPie();
-                        var drawOuter = !shape.isInnerPie() && showSubitemsInnerlabels && (innerlabalpoint == null || shape.data.value > innerlabalpoint);
+            var drawInner = shape.isInnerPie();
+            var drawOuter = !shape.isInnerPie() && showSubitemsInnerlabels && (innerlabalpoint == null || shape.data.value > innerlabalpoint);
             if (drawInner || drawOuter) {
                 var midAngle = (shape.angleMin + shape.angleMax) / 2;
                 var data = shape.data;
@@ -405,7 +405,7 @@ DChart.NestedPie._drawgraphic = function (inner, graphicID, innerData, options) 
                 drawPart(scaleAnimation, null, cumulativeAngle, angleMax, color);
             }
             cumulativeAngle += segmentAngle;
-                        var subitems = item.subitems;
+            var subitems = item.subitems;
             if (subitems && DChart.Methods.IsArray(subitems)) {
                 for (var j = 0, subitem; subitem = subitems[j]; j++) {
                     var percentSub = (subitem.value / allTotal) * 100;
@@ -416,7 +416,7 @@ DChart.NestedPie._drawgraphic = function (inner, graphicID, innerData, options) 
                         subitem.indexX = i;
                         subitem.indexY = j;
                         subitem.percent = percentSub;
-                                                subitem.subpercent = (subitem.value / subTotals[i]) * 100;
+                        subitem.subpercent = (subitem.value / subTotals[i]) * 100;
                         var _pieshapeSub = new pieshape(i, j, cumulativeAngleSub, angleMaxSub, subitem);
                         _pieshapeSub.superShape = _pieshape;
                         shapes.cemicircles.push(_pieshapeSub);

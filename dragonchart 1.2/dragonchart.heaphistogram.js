@@ -49,7 +49,7 @@ DChart.HeapHistogram._drawgraphic = function (inner, graphicID, innerData, optio
     if (options.valueType && options.valueType != 'n' && options.valueType != 'p') {
         throw new Error(inner._messages.WrongParam + inner._messages.ValueTypeMustBeNumberOrPercent);
     }
-    if (!innerData[0].value.length || innerData[0].value.length <= 1) {
+    if (!DChart.Methods.IsArray(innerData[0].value) || innerData[0].value.length < 1) {
         throw new Error(inner._messages.WrongData + inner._messages.DataMustBeMultipleArray);
     }
     if (graphicID == inner.ID) {

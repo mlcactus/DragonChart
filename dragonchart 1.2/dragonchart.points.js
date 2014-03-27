@@ -170,10 +170,10 @@ DChart.Points._drawgraphic = function (inner, graphicID, innerData, options) {
             }
             else {
                 if (axisData.multiple) {
-                    return labelAxisLength * val / (innerData[0].value.length - 1);
+                    return val == 0 ? 0 : labelAxisLength * val / (axisData.tuftCount - 1);
                 }
                 else {
-                    if (lineIsMain) { return labelAxisLength * val / (innerData.length - 1); }
+                    if (lineIsMain) { return val == 0 ? 0 : labelAxisLength * val / (innerData.length - 1); }
                     else { return axisSize.labelDistance * val; }
                 }
             }
@@ -207,7 +207,6 @@ DChart.Points._drawgraphic = function (inner, graphicID, innerData, options) {
                     else {
                         center1 = (invertAxis ? axisSize.maxY - getLabelWidth(lvalue) : axisSize.minX + getLabelWidth(lvalue));
                     }
-
                     drawnode(invertAxis ? center2 : center1, invertAxis ? center1 : center2, color, dataitem);
                     addPointsShape(i, k, invertAxis ? center2 : center1, invertAxis ? center1 : center2, dataitem.nodelength || nodelength, color, vvalue, lvalue, text, vpercent, dataitem);
                 }
@@ -244,23 +243,33 @@ DChart.Points._drawgraphic = function (inner, graphicID, innerData, options) {
             var loc = 0;
             if (y <= axisSize.maxY && y >= axisSize.minY && x >= axisSize.minX && x <= axisSize.maxX) {
                 var index = -1;
-                var cut = labelAxisLength / (axisData.tuftCount - 1);
                 var startDistance = (invertAxis ? axisSize.maxY : axisSize.minX);
                 var referPos = (invertAxis ? y : x);
-                for (var i = 1; i < axisData.tuftCount; i++) {
-                    var x1 = startDistance + (invertAxis ? -i * cut : (i - 1) * cut);
-                    var x2 = startDistance + (invertAxis ? -(i - 1) * cut : i * cut);
-                    if (x1 <= referPos && x2 >= referPos) {
-                        var distance1 = Math.abs(x1 - referPos);
-                        var distance2 = Math.abs(x2 - referPos);
-                        if (distance1 < spotdistance && distance1 <= distance2) {
-                            index = invertAxis ? i : i - 1; loc = x1;
+                if (axisData.tuftCount == 1) {
+                    if (Math.abs(startDistance - referPos) < spotdistance) {
+                        index = 0;
+                        loc = startDistance;
+                    }
+                }
+                else {
+                    var cut = labelAxisLength / (axisData.tuftCount - 1);
+
+                    for (var i = 1; i < axisData.tuftCount; i++) {
+                        var x1 = startDistance + (invertAxis ? -i * cut : (i - 1) * cut);
+                        var x2 = startDistance + (invertAxis ? -(i - 1) * cut : i * cut);
+                        if (x1 <= referPos && x2 >= referPos) {
+                            var distance1 = Math.abs(x1 - referPos);
+                            var distance2 = Math.abs(x2 - referPos);
+                            if (distance1 < spotdistance && distance1 <= distance2) {
+                                index = invertAxis ? i : i - 1;
+                                loc = x1;
+                            }
+                            else if (distance2 < spotdistance && distance2 <= distance1) {
+                                index = invertAxis ? i - 1 : i;
+                                loc = x2;
+                            }
+                            break;
                         }
-                        else if (distance2 < spotdistance && distance2 <= distance1) {
-                            index = invertAxis ? i - 1 : i;
-                            loc = x2;
-                        }
-                        break;
                     }
                 }
                 for (var i = 0, shape; shape = inner.shapes[graphicID].nodes[i]; i++) {

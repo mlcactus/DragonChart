@@ -332,6 +332,7 @@ DChart.Const = {
             RGBAChangeTransparencyWrongParam: 'RGBA表达式格式错误，或透明度值错误，必须>=0且<=1。',
             NeedDateData: '数据必须是日期格式。',
             NeedNumberData: '数据必须是数字格式。',
+            NeedLeastTwoPoints: '要求至少有两个数据计算两个点以形成连线。',
             OuterRadiusShouldBigger: '环状图外部半径应大于内部半径',
             AxisMaxLessThanMin: '坐标设定的最大值应该大于最小值。',
             AxisMaxLessThanActual: '坐标设定的最大值应该大于实际数据的最大值。',
@@ -341,6 +342,7 @@ DChart.Const = {
             ValueTypeMustBeNumberOrPercent: '值轴的数据类型必须为n或p。',
             ValueTypeMustNotBePercent: '值轴的数据类型不能为p。',
             AxisVauleShouldBeDArray: '数据必须为二维数组（第一个元素为文本轴值，第二个元素为值轴值）。',
+            DataShouldBeSameAmount: '多维数组时，每个维度的数据量必须一致。',
             ValueAxisValueShouldBeDArray: '值轴数据必须为二位数组（第一个元素为较小值，第二个元素为较大值）。',
             DataMustGreaterThanZero: '数据必须为不小于零的数字。',
             SubItemsValueShouldEqualSuperValue: '子节点值的总和应该等于上级母节点的值。',
@@ -379,6 +381,7 @@ DChart.Const = {
             RGBAChangeTransparencyWrongParam: 'RGBA expression is wrong，or transparency number is unqualified, it must be >=0 and <=1.',
             NeedDateData: 'Data must be a date format.',
             NeedNumberData: 'Data must be a number format.',
+            NeedLeastTwoPoints: 'At least two values as points needed to be computed to build up a line.',
             OuterRadiusShouldBigger: 'Ring graphic outer radius should be larger than the internal radius',
             AxisMaxLessThanMin: 'The maximum value set of axis should be greater than the minimum value.',
             AxisMaxLessThanActual: 'The maximum value set of axis should be greater than the actual maximum value.',
@@ -388,6 +391,7 @@ DChart.Const = {
             ValueTypeMustBeNumberOrPercent: 'The valueType of value-axis must be n or p.',
             ValueTypeMustNotBePercent: 'The valueType of value-axis cannot be percent.',
             AxisVauleShouldBeDArray: 'Data must be double-array(first value for label axis，second for value axis).',
+            DataShouldBeSameAmount: 'When use multiple data, every amount of each dimension data must be the same.',
             ValueAxisValueShouldBeDArray: 'Data of value axis must be double-array(first value for smaller value，second for bigger value).',
             DataMustGreaterThanZero: 'Data must not be less than zero.',
             SubItemsValueShouldEqualSuperValue: 'The sum of value of subitems should equal the value of mother node.',
@@ -1861,12 +1865,18 @@ DChart.getCore = function () {
             var maxvalue = ops.maxvalue;
 
             var getInterval = function (minval, maxval, valueType) {
-                if (Math.abs(minval - maxval) < 0.00001) { return maxval / 2; }
+                if (Math.abs(minval - maxval) < 0.0000001) {
+                    if (valueType == 'd' || valueType == 't') { return 1; }
+                    else { return maxval / 2; }
+                }
                 var interval = inner._getFormatDiff(valueType, minvalue != null && minvalue < minval ? minvalue : minval, maxvalue != null && maxvalue > maxval ? maxvalue : maxval) / scaleCount;
                 var defaults = DChart.Const.Interval[valueType].__copy();
                 var find = false;
                 while (!find) {
-                    if (interval < defaults[0]) { defaults.__multiply(0.1); }
+                    if (interval < defaults[0]) {
+                        if (valueType == 'd' || valueType == 't') { interval = defaults[0]; break; }
+                        else { defaults.__multiply(0.1); }
+                    }
                     if (interval > defaults[defaults.length - 1]) { defaults.__multiply(10); }
                     for (var i = 1; i < defaults.length; i++) {
                         if (defaults[i - 1] <= interval && defaults[i] >= interval) {
@@ -1902,10 +1912,12 @@ DChart.getCore = function () {
             if (maxvalue == null) {
                 if (valueType == 'd' || valueType == 't') {
                     var cut = interval * 60000 * (valueType == "d" ? 1440 : 1);
-                    maxvalue = new Date(minvalue.getTime() + (Math.ceil((maxval.getTime() - minvalue.getTime()) / cut) + vAxisVery) * cut);
+                    var addSection = Math.ceil((maxval.getTime() - minvalue.getTime()) / cut);
+                    maxvalue = new Date(minvalue.getTime() + ((addSection || 1) + vAxisVery) * cut);
                 }
                 else {
-                    maxvalue = minvalue + (Math.ceil((maxval - minvalue) / interval) + vAxisVery) * interval;
+                    var addSection = (Math.ceil((maxval - minvalue) / interval) + vAxisVery);
+                    maxvalue = minvalue + (addSection || 1) * interval;
                 }
             }
             if (valueType == 'p' && maxvalue > 100) { maxvalue = 100; }
@@ -1947,9 +1959,9 @@ DChart.getCore = function () {
             var innerData = inner.innerData;
             var lValueType = options.labelAxis.valueType;
             var isRange = inner._configs.valueAxiaDataIsRange;
-            var multiple = (!isRange && !lValueType && innerData[0].value.length > 1) || (!isRange && lValueType && innerData[0].value.length && innerData[0].value[0].length == 2)
-                  || (isRange && innerData[0].value.length > 1 && innerData[0].value[0].length == 2);
-            var vValueType = options.valueType || DChart.Const.Defaults.ValueType;
+            var multiple = DChart.Methods.IsArray(innerData[0].value) && innerData[0].value.length > 0 &&
+                ((!isRange && !lValueType) || (!isRange && lValueType && innerData[0].value[0].length == 2) || (isRange && innerData[0].value[0].length == 2));
+            var vValueType = options.valueType || DChart.Const.Defaults.ValueType; 
 
             var heapCompute = heapCompute && multiple && !lValueType && (vValueType == 'p' || vValueType == 'n');
 
@@ -2077,6 +2089,9 @@ DChart.getCore = function () {
             };
             if (multiple) {
                 for (var i = 0, item; item = innerData[i]; i++) {
+                    if (!lValueType && item.value.length != tuftCount) {
+                        throw new Error(inner._messages.WrongData + "'[" + item.value + "]'" + inner._messages.DataShouldBeSameAmount);
+                    }
                     for (var j = 0; j < item.value.length; j++) {
                         var value = item.value[j];
                         var lValue = null; var vValue = value;
@@ -2145,6 +2160,7 @@ DChart.getCore = function () {
                     else {
                         var vValue = formatValue(true, vValueType, vValue, i, lValueType ? 1 : undefined);
                         updateValueExtreme(vValue);
+                        updateSplitExtreme(vValue, 0, i == 0);
                     }
                 }
             }
@@ -2164,6 +2180,9 @@ DChart.getCore = function () {
                 else {
                     splitpoint = (tmpMin + tmpMax) / 2;
                 }
+            }
+            if (splitpoint != null || options.splitpoint != null) {
+                updateValueExtreme(splitpoint || options.splitpoint);
             }
             if (lValueType && options.labelAxis.sort) {
                 var asc = function (x, y) {
@@ -2308,8 +2327,7 @@ DChart.getCore = function () {
 
             var axisValueCut = (invertAxis ? maxX - minX : maxY - minY) / axisData.vScalecount;
 
-            var multiple = axisData.multiple;
-            var labelCount = axisData.lLabels.length || (multiple ? inner.innerData[0].value.length : inner.innerData.length);
+            var labelCount = axisData.lLabels.length || axisData.tuftCount;
             var fromFirstLeft = DChart.Const.AxisFromFirstLeft.__contains(inner.GraphType);
             var startlength = 0;
             var endlength = 0;
@@ -2330,6 +2348,7 @@ DChart.getCore = function () {
             }
             var startPos = (invertAxis ? maxY : minX) + (invertAxis ? -endlength : startlength);
             var labelDistance = (lMaxLength - startlength - endlength) / (labelCount - 1);
+            if (labelCount <= 1) { labelDistance = lMaxLength * 2 / 3; }
             var splitLinePos = null;
             if (DChart.Const.ComputeSplitPoint.__contains(inner.GraphType)) {
                 splitLinePos = (invertAxis ? minX : minY) + vMaxLength * inner._getFormatDiff(axisData.vValueType, (invertAxis ? axisData.vMinValue : axisData.vMaxValue), axisData.splitpoint) / inner._getFormatDiff(axisData.vValueType, axisData.vMinValue, axisData.vMaxValue);

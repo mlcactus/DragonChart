@@ -112,6 +112,9 @@ DChart.RangeArea._drawgraphic = function (inner, graphicID, innerData, options) 
         inner._configs.valueAxiaDataIsRange = true;
     }
     var axisData = inner._formatAxisData();
+    if (axisData.tuftCount < 2) {
+        throw new Error(inner._messages.WrongData + inner._messages.NeedLeastTwoPoints);
+    }
     var valids = inner._calculateOutersValid();
     var axisSize = inner._computeAxis(valids);
     var coordinate = inner._getDrawableCoordinate();
@@ -201,7 +204,7 @@ DChart.RangeArea._drawgraphic = function (inner, graphicID, innerData, options) 
             }
             else {
                 if (axisData.multiple) {
-                    return labelAxisLength * val / (innerData[0].value.length - 1);
+                    return labelAxisLength * val / (axisData.tuftCount - 1);
                 }
                 else {
                     return labelAxisLength * val / (innerData.length - 1);

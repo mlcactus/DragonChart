@@ -21,7 +21,8 @@ DChart.QueueBar._getDefaultOptions = function (originalCommonOptions) {
         bar: {
             colors: null,
             length: null,
-            gap: null
+            gap: null,
+            useSameColor: true
         },
         label: {
             show: true,
@@ -41,14 +42,11 @@ DChart.QueueBar._getDefaultOptions = function (originalCommonOptions) {
 DChart.QueueBar._getCheckOptions = function () {
     return {
         __top: [['animateY', 'b'], ['animateX', 'b'], ['contrastmode', 'b']],
-        bar: [['colors', 'ca'], ['length', 'n'], ['gap', 'n']],
+        bar: [['colors', 'ca'], ['length', 'n'], ['gap', 'n'], ['useSameColor', 'b']],
         label: [['show', 'b'], ['content', 'f'], ['color', 'c'], ['fontweight', 's'], ['fontsize', 'n'], ['fontfamily', 's']]
     };
 };
 DChart.QueueBar._drawgraphic = function (inner, graphicID, innerData, options) {
-    if (!innerData[0].value.length || innerData[0].value.length <= 1) {
-        throw new Error(inner._messages.WrongData + inner._messages.DataMustBeMultipleArray);
-    }
     if (options.valueType == 'p') {
         throw new Error(inner._messages.WrongParam + inner._messages.ValueTypeMustNotBePercent);
     }
@@ -58,7 +56,7 @@ DChart.QueueBar._drawgraphic = function (inner, graphicID, innerData, options) {
     var axisData = inner._formatAxisData();
     if (computeSplitPoint) { splitpoint = axisData.splitpoint; }
     else { axisData.splitpoint = splitpoint; }
-    if (innerData.length > 1 && (splitpoint >= axisData.vMaxval || splitpoint <= axisData.vMinval)) { throw new Error(inner._messages.WrongSet + inner._messages.WrongSplitPoint); }
+    if (axisData.demanCount > 1 && (splitpoint >= axisData.vMaxval || splitpoint <= axisData.vMinval)) { throw new Error(inner._messages.WrongSet + inner._messages.WrongSplitPoint); }
     var valids = inner._calculateOutersValid();
     var axisSize = inner._computeAxis(valids);
     var colors = (options.bar.colors && options.bar.colors.length > 0 ? options.bar.colors : null) || DChart.Const.Defaults.FillColors;
@@ -170,26 +168,47 @@ DChart.QueueBar._drawgraphic = function (inner, graphicID, innerData, options) {
         };
         for (var i = 0, item; item = innerData[i]; i++) {
             var height = (options.animateY ? animationDecimal : 1) * length;
-            var color = item.color || colors[i % colors.length];
-            for (var k = 0; k < item.value.length; k++) {
-                var val = item.value[k];
-                var isSmall = val < splitpoint;
+            if (axisData.multiple) {
+                var color = item.color || colors[i % colors.length];
                 var cut = demanCount / 2 - (contrastmode ? parseInt(i / 2) : i);
-                var top = axisSize.startPos - axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
+                for (var k = 0; k < item.value.length; k++) {
+                    var val = item.value[k];
+                    var isSmall = val < splitpoint;
+                    var top = axisSize.startPos - axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
+                    var width = getWidth(val);
+                    var left = isSmall ? axisSize.splitLinePos - width : axisSize.splitLinePos;
+                    if (percentAnimComplete >= 1) {
+                        var data = { text: item.text, value: val, indexX: k, indexY: i, fontsize: item.fontsize, fontcolor: item.fontcolor, fontweight: item.fontweight, click: item.click, mouseover: item.mouseover, mouseleave: item.mouseleave };
+                        var shape = new barShape(isSmall, k, i, left, top, width, height, color, data);
+                        inner.shapes[graphicID].bars.push(shape);
+                        drawPart(isSmall, left, top, width, height, color, data);
+                        if (!inner.coordinates.bars[graphicID][k]) { inner.coordinates.bars[graphicID][k] = []; }
+                        inner.coordinates.bars[graphicID][k][i] = { left: left, top: top, width: width, height: height, color: color };
+                    }
+                    else {
+                        drawPart(isSmall, left, top, width, height, color);
+                    }
+                }
+            }
+            else {
+                var val = item.value;
+                var isSmall = val < splitpoint;
                 var width = getWidth(val);
                 var left = isSmall ? axisSize.splitLinePos - width : axisSize.splitLinePos;
+                var top = axisSize.startPos - axisSize.labelDistance * i - length / 2;
+                var color = item.color || (options.bar.useSameColor ? 'rgba(69,114,167,1)' : colors[i % colors.length]);
                 if (percentAnimComplete >= 1) {
-                    var data = { text: item.text, value: val, indexX: k, indexY: i, fontsize: item.fontsize, fontcolor: item.fontcolor, fontweight: item.fontweight, click: item.click, mouseover: item.mouseover, mouseleave: item.mouseleave };
-                    var shape = new barShape(isSmall, k, i, left, top, width, height, color, data);
+                    var data = { text: item.text, value: val, indexX: i, indexY: null, fontsize: item.fontsize, fontcolor: item.fontcolor, fontweight: item.fontweight, click: item.click, mouseover: item.mouseover, mouseleave: item.mouseleave };
+                    var shape = new barShape(isSmall, i, null, left, top, width, height, color, data);
                     inner.shapes[graphicID].bars.push(shape);
                     drawPart(isSmall, left, top, width, height, color, data);
-                    if (!inner.coordinates.bars[graphicID][k]) { inner.coordinates.bars[graphicID][k] = []; }
-                    inner.coordinates.bars[graphicID][k][i] = { left: left, top: top, width: width, height: height, color: color };
+                    inner.coordinates.bars[graphicID][i] = { left: left, top: top, width: width, height: height, color: color };
                 }
                 else {
                     drawPart(isSmall, left, top, width, height, color);
                 }
             }
+
         }
     };
     var mouseEvents = function () {

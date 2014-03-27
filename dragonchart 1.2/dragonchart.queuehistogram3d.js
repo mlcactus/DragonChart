@@ -21,7 +21,8 @@ DChart.QueueHistogram3D._getDefaultOptions = function (originalCommonOptions) {
         histogram: {
             colors: null,
             length: null,
-            gap: null
+            gap: null,
+            useSameColor: true
         },
         label: {
             show: true,
@@ -41,14 +42,11 @@ DChart.QueueHistogram3D._getDefaultOptions = function (originalCommonOptions) {
 DChart.QueueHistogram3D._getCheckOptions = function () {
     return {
         __top: [['animateY', 'b'], ['animateX', 'b'], ['contrastmode', 'b']],
-        histogram: [['colors', 'ca'], ['length', 'n'], ['gap', 'n']],
+        histogram: [['colors', 'ca'], ['length', 'n'], ['gap', 'n'], ['useSameColor', 'b']],
         label: [['show', 'b'], ['content', 'f'], ['color', 'c'], ['fontweight', 's'], ['fontsize', 'n'], ['fontfamily', 's']]
     };
 };
 DChart.QueueHistogram3D._drawgraphic = function (inner, graphicID, innerData, options) {
-    if (!innerData[0].value.length || innerData[0].value.length <= 1) {
-        throw new Error(inner._messages.WrongData + inner._messages.DataMustBeMultipleArray);
-    }
     if (options.valueType == 'p') {
         throw new Error(inner._messages.WrongParam + inner._messages.ValueTypeMustNotBePercent);
     }
@@ -59,7 +57,7 @@ DChart.QueueHistogram3D._drawgraphic = function (inner, graphicID, innerData, op
     var axisData = inner._formatAxisData();
     if (computeSplitPoint) { splitpoint = axisData.splitpoint; }
     else { axisData.splitpoint = splitpoint; }
-    if (innerData.length > 1 && (splitpoint >= axisData.vMaxval || splitpoint <= axisData.vMinval)) { throw new Error(inner._messages.WrongSet + inner._messages.WrongSplitPoint); }
+    if (axisData.demanCount > 1 && (splitpoint >= axisData.vMaxval || splitpoint <= axisData.vMinval)) { throw new Error(inner._messages.WrongSet + inner._messages.WrongSplitPoint); }
     var valids = inner._calculateOutersValid();
     var axisSize = inner._computeAxis(valids);
     var colors = (options.histogram.colors && options.histogram.colors.length > 0 ? options.histogram.colors : null) || DChart.Const.Defaults.FillColors;
@@ -178,21 +176,38 @@ DChart.QueueHistogram3D._drawgraphic = function (inner, graphicID, innerData, op
         var histograms = [];
         for (var i = 0, item; item = innerData[i]; i++) {
             var width = (options.animateX ? animationDecimal : 1) * length;
-            var color = item.color || colors[i % colors.length];
-            for (var k = 0; k < item.value.length; k++) {
-                var val = item.value[k];
-                var isSmall = val < splitpoint;
+            if (axisData.multiple) {
+                var color = item.color || colors[i % colors.length];
                 var cut = demanCount / 2 - (contrastmode ? parseInt(i / 2) : i);
-                var left = axisSize.startPos + axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
+                for (var k = 0; k < item.value.length; k++) {
+                    var val = item.value[k];
+                    var isSmall = val < splitpoint;
+                    var left = axisSize.startPos + axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
+                    var height = getHeight(val);
+                    var top = isSmall ? axisSize.splitLinePos : axisSize.splitLinePos - height;
+                    var data = null;
+                    if (complete) {
+                        data = { text: item.text, value: val, indexX: i, indexY: k, fontsize: item.fontsize, fontcolor: item.fontcolor, fontweight: item.fontweight, click: item.click, mouseover: item.mouseover, mouseleave: item.mouseleave };
+                        if (!inner.coordinates.histograms[graphicID][k]) { inner.coordinates.histograms[graphicID][k] = []; }
+                        inner.coordinates.histograms[graphicID][k][i] = { left: left, top: top, width: width, height: height, color: color };
+                    }
+                    var shape = new barShape(isSmall, i, k, left, top, width, height, color, item.topcolor, item.rightcolor, data);
+                    histograms.push(shape);
+                }
+            }
+            else {
+                var val = item.value;
+                var isSmall = val < splitpoint;
+                var left = axisSize.startPos + axisSize.labelDistance * i - length / 2;
                 var height = getHeight(val);
                 var top = isSmall ? axisSize.splitLinePos : axisSize.splitLinePos - height;
+                var color = item.color || (options.histogram.useSameColor ? 'rgba(69,114,167,1)' : colors[i % colors.length]);
                 var data = null;
                 if (complete) {
-                    data = { text: item.text, value: val, indexX: i, indexY: k, fontsize: item.fontsize, fontcolor: item.fontcolor, fontweight: item.fontweight, click: item.click, mouseover: item.mouseover, mouseleave: item.mouseleave };
-                    if (!inner.coordinates.histograms[graphicID][k]) { inner.coordinates.histograms[graphicID][k] = []; }
-                    inner.coordinates.histograms[graphicID][k][i] = { left: left, top: top, width: width, height: height, color: color };
+                    data = { text: item.text, value: val, indexX: i, indexY: null, fontsize: item.fontsize, fontcolor: item.fontcolor, fontweight: item.fontweight, click: item.click, mouseover: item.mouseover, mouseleave: item.mouseleave };
+                    inner.coordinates.histograms[graphicID][i] = { left: left, top: top, width: width, height: height, color: color };
                 }
-                var shape = new barShape(isSmall, i, k, left, top, width, height, color, item.topcolor, item.rightcolor, data);
+                var shape = new barShape(isSmall, i, null, left, top, width, height, color, item.topcolor, item.rightcolor, data);
                 histograms.push(shape);
             }
         }

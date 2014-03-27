@@ -102,6 +102,9 @@ DChart.Area._drawgraphic = function (inner, graphicID, innerData, options) {
     }
     var specificConfig = inner._configs.specificConfig[graphicID];
     var axisData = inner._formatAxisData(options.valueAxis.heap);
+    if (axisData.tuftCount < 2) {
+        throw new Error(inner._messages.WrongData + inner._messages.NeedLeastTwoPoints);
+    }
     var valids = inner._calculateOutersValid();
     var axisSize = inner._computeAxis(valids);
     var coordinate = inner._getDrawableCoordinate();
@@ -205,7 +208,7 @@ DChart.Area._drawgraphic = function (inner, graphicID, innerData, options) {
             }
             else {
                 if (axisData.multiple) {
-                    return labelAxisLength * val / (innerData[0].value.length - 1);
+                    return labelAxisLength * val / (axisData.tuftCount - 1);
                 }
                 else {
                     return axisSize.labelDistance * val;
