@@ -19,18 +19,22 @@ Date.prototype.format = function (fmt) {
     }
     return fmt;
 };
+Date.prototype.addMilliseconds = function (value) {
+    this.setTime(this.getTime() + value);
+    return this;
+};
 Date.prototype.addMinutes = function (value) {
-    var minute = this.getMinutes();
-    this.setMinutes(minute + value);
+    this.setMinutes(this.getMinutes() + value);
     return this;
 };
 Date.prototype.addDays = function (value) {
-    var date = this.getDate();
-    this.setDate(date + value);
+    this.setDate(this.getDate() + value);
     return this;
 };
 Date.prototype.shortOf = function (interval, endTime) {
     switch (interval) {
+        case "S":
+            return endTime - this;
         case "s":
             return parseInt((endTime - this) / 1000);
         case "n":
@@ -213,7 +217,7 @@ DChart.Methods = {
         return r1 < r2;
     },
     CopyInnerValue: function (valueType, value) {
-        if (valueType == 'd' || valueType == 't') {
+        if (valueType == 'd' || valueType == 't' || valueType == 'm') {
             return new Date(value.getTime());
         }
         return value;
@@ -224,6 +228,9 @@ DChart.Methods = {
         }
         else if (valueType == 't') {
             value = value.addMinutes(add);
+        }
+        else if (valueType == 'm') {
+            value = value.addMilliseconds(add);
         }
         else {
             value += add;
@@ -316,6 +323,7 @@ DChart.Const = {
     Language: {
         CN: {
             NotSupportHtml5: '您的浏览器不支持HTML5！',
+            NeetExcanvasJS: '请引用excanvas.js',
             PluginParamWrong: '添加组合图的参数错误，图形类别不为字符串或图形类别不支持！',
             PluginNotSupportedType: '不能作为组合图，只能作为主图！',
             GraphicTypeNotQuoted: '图形未引用，请引用DChart相关图形的js！',
@@ -365,6 +373,7 @@ DChart.Const = {
         },
         EN: {
             NotSupportHtml5: 'Your browser does not support HTML5',
+            NeetExcanvasJS: '"please include excanvas.js!',
             PluginParamWrong: 'Wrong paramers to add a plugin graphic, grapihc type is not a string or the type is not supported!',
             PluginNotSupportedType: 'cannot be used as a plugin, this type must be used as main graphic!',
             GraphicTypeNotQuoted: 'The graphic is not quoted, please quote dragonchart.[type].(min).js',
@@ -635,9 +644,9 @@ DChart.Const = {
         OffXCutForPies: 20,
         OffXCutForAxis: 70,
         AxisXDrawableCut: 6,
-        AxisYDrawableCut: { n: 9, p: 9, d: 7, t: 7 },
-        AxisYTitleLocation: { n: 0.7, p: 0.7, d: 0.75, t: 0.75 },
-        AxisXTitleLocation: { n: 0.8, p: 0.8, d: 0.8, t: 0.8 }
+        AxisYDrawableCut: { n: 9, p: 9, d: 7, t: 7, m: 7 },
+        AxisYTitleLocation: { n: 0.7, p: 0.7, d: 0.75, t: 0.75, m: 0.75 },
+        AxisXTitleLocation: { n: 0.8, p: 0.8, d: 0.8, t: 0.8, m: 0.8 }
     },
     Exceps: ['background.fillstyle'],
     NotDrawAxis: ['Pie', 'Ring', 'MultiRing', 'Polar', 'Radar', 'NestedPie', 'Pie3D', 'Ring3D', 'MultiRing3D', 'Polar3D', 'NestedPie3D'],
@@ -688,7 +697,8 @@ DChart.Const = {
         n: [1, 2, 3, 4, 5, 8, 10, 20, 30, 40, 50, 80, 100, 200, 300, 500, 800, 1000],
         p: [1, 2, 3, 4, 5, 8, 10, 20, 25, 50],
         d: [1, 2, 3, 5, 7, 10, 14, 20, 21, 30, 60, 90, 365],
-        t: [1, 2, 5, 10, 20, 30, 60, 120, 180, 240, 300, 480, 720, 1440]
+        t: [1, 2, 5, 10, 20, 30, 60, 120, 180, 240, 300, 480, 720, 1440],
+        m: [1, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 60000, 600000, 1800000, 3600000]
     }
 };
 
@@ -807,7 +817,12 @@ DChart.getCore = function () {
             canvas.innerHTML = '<p>' + inner._messages.NotSupportHtml5 + '</p>';
             canvas.setAttribute('style', style);
             if (inner._configs._isIE678.isIE678) {
-                canvas = window.G_vmlCanvasManager.initElement(canvas);
+                if (window.G_vmlCanvasManager) {
+                    canvas = window.G_vmlCanvasManager.initElement(canvas);
+                }
+                else {
+                    throw new Error(inner._messages.NeetExcanvasJS);
+                }
             }
             inner.parentdiv.appendChild(canvas);
             inner.canvas = canvas;
@@ -955,6 +970,7 @@ DChart.getCore = function () {
                     content: function (val) {
                         if (this.valueType == 'd') { return val.format('yyyy-MM-dd'); }
                         else if (this.valueType == 't') { return val.format('MM-dd hh:mm'); }
+                        else if (this.valueType == 'm') { return val.format('hh:mm:ss.S'); }
                         else if (this.valueType == 'p') { return val.toFixed(0).toString() + '%'; }
                         else { return val.toString(); }
                     },
@@ -1044,6 +1060,7 @@ DChart.getCore = function () {
                         var val = data.value.toString();
                         if (this.valueType == 'd') { val = data.value.format('yyyy-MM-dd'); }
                         else if (this.valueType == 't') { val = data.value.format('MM-dd hh:mm'); }
+                        else if (this.valueType == 'm') { val = data.value.format('hh:mm:ss.S'); }
                         return '<div>&nbsp;' + data.text + '：' + val + '&nbsp;</div>';
                     },
                     tiptype: null
@@ -1236,10 +1253,13 @@ DChart.getCore = function () {
                         break;
                     case 'd':
                     case 't':
+                    case 'm':
                         var valIsDate = DChart.Methods.IsDate(val);
                         var valIsDateString = typeof val == 'string' && DChart.Methods.StringIsDate(val);
-                        if (!valIsDate && !valIsDateString) { throwErr('OptionShouldBeDate'); }
+                        var valIsNumber = typeof val == 'number';
+                        if (!valIsDate && !valIsDateString && !valIsNumber) { throwErr('OptionShouldBeDate'); }
                         if (valIsDateString) { returnval = DChart.Methods.ParseDate(val); }
+                        else if (valIsNumber) { returnval = new Date(val); }
                         break;
                     case 'b':
                         if (typeof val != 'boolean') { throwErr('OptionShouldBeBoolean'); }
@@ -1856,6 +1876,9 @@ DChart.getCore = function () {
             else if (valueType == 't') {
                 return small.shortOf('n', big);
             }
+            else if (valueType == 'm') {
+                return small.shortOf('S', big);
+            }
             else {
                 return big - small;
             }
@@ -1863,10 +1886,10 @@ DChart.getCore = function () {
         inner._getComputed = function (vAxisVery, valueType, ops, minval, maxval, scaleCount) {
             var minvalue = ops.minvalue;
             var maxvalue = ops.maxvalue;
-
+            var isTimeType = valueType == 'd' || valueType == 't' || valueType == 'm';
             var getInterval = function (minval, maxval, valueType) {
                 if (Math.abs(minval - maxval) < 0.0000001) {
-                    if (valueType == 'd' || valueType == 't') { return 1; }
+                    if (isTimeType) { return 1; }
                     else { return maxval / 2; }
                 }
                 var interval = inner._getFormatDiff(valueType, minvalue != null && minvalue < minval ? minvalue : minval, maxvalue != null && maxvalue > maxval ? maxvalue : maxval) / scaleCount;
@@ -1874,7 +1897,7 @@ DChart.getCore = function () {
                 var find = false;
                 while (!find) {
                     if (interval < defaults[0]) {
-                        if (valueType == 'd' || valueType == 't') { interval = defaults[0]; break; }
+                        if (isTimeType) { interval = defaults[0]; break; }
                         else { defaults.__multiply(0.1); }
                     }
                     if (interval > defaults[defaults.length - 1]) { defaults.__multiply(10); }
@@ -1893,8 +1916,8 @@ DChart.getCore = function () {
                 interval = getInterval(minval, maxval, valueType);
             }
             if (minvalue == null) {
-                if (valueType == 'd' || valueType == 't') {
-                    var cut = interval * 60000 * (valueType == "d" ? 1440 : 1);
+                if (isTimeType) {
+                    var cut = interval * (valueType == "d" ? 1440 * 60000 : (valueType == 'm' ? 1 : 60000));
                     minvalue = new Date(minval - cut * vAxisVery);
                     if (valueType == 'd') {
                         minvalue = new Date(Date.parse(minvalue.format('yyyy/MM/dd')));
@@ -1910,8 +1933,8 @@ DChart.getCore = function () {
             if (vAxisVery && minvalue < 0 && inner._configs.notAllowValueNegative) { minvalue = 0; }
 
             if (maxvalue == null) {
-                if (valueType == 'd' || valueType == 't') {
-                    var cut = interval * 60000 * (valueType == "d" ? 1440 : 1);
+                if (isTimeType) {
+                    var cut = interval * (valueType == "d" ? 1440 * 60000 : (valueType == 'm' ? 1 : 60000));
                     var addSection = Math.ceil((maxval.getTime() - minvalue.getTime()) / cut);
                     maxvalue = new Date(minvalue.getTime() + ((addSection || 1) + vAxisVery) * cut);
                 }
@@ -1931,8 +1954,8 @@ DChart.getCore = function () {
                 scalecount++;
             }
             maxvalue = DChart.Methods.AddInnerValue(valueType, val, -interval);
-            if ((valueType == 'p' || valueType == 'n') && maxvalue < maxval) {
-                maxvalue += interval;
+            if (maxvalue < maxval) {
+                maxvalue = DChart.Methods.AddInnerValue(valueType, val, interval);
                 scalecount++;
             }
 
@@ -1961,7 +1984,7 @@ DChart.getCore = function () {
             var isRange = inner._configs.valueAxiaDataIsRange;
             var multiple = DChart.Methods.IsArray(innerData[0].value) && innerData[0].value.length > 0 &&
                 ((!isRange && !lValueType) || (!isRange && lValueType && innerData[0].value[0].length == 2) || (isRange && innerData[0].value[0].length == 2));
-            var vValueType = options.valueType || DChart.Const.Defaults.ValueType; 
+            var vValueType = options.valueType || DChart.Const.Defaults.ValueType;
 
             var heapCompute = heapCompute && multiple && !lValueType && (vValueType == 'p' || vValueType == 'n');
 
@@ -2011,8 +2034,19 @@ DChart.getCore = function () {
                 }
             }
             var formatValue = function (valueAxis, valueType, value, i, j, k) {
-                if ((valueType == 'd' || valueType == 't') && !value.getDate) {
+                if ((valueType == 'd' || valueType == 't' || valueType == 'm') && !value.getDate) {
                     var parseDate = Date.parse(value.toString().replace(/-/g, "/"));
+                    if (typeof value == 'number') {
+                        parseDate = value;
+                    }
+                    else {
+                        if (isNaN(parseDate) && (valueType == 't' || valueType == 'm')) {
+                            parseDate = Date.parse((new Date()).format("yyyy/MM/dd ") + value);
+                        }
+                        if (isNaN(parseDate) && valueType == 'm') {
+                            parseDate = Date.parse((new Date()).format("yyyy/MM/dd hh:") + value);
+                        }
+                    }
                     if (isNaN(parseDate)) {
                         throw new Error(inner._messages.WrongData + "'" + value + "'" + inner._messages.NeedDateData);
                     }
@@ -2173,7 +2207,7 @@ DChart.getCore = function () {
                     if (max > tmpMax && (tmpMin > tmpMax || min < tmpMax)) { tmpMax = min; }
                     if (min < tmpMin && (tmpMin > tmpMax || max > tmpMin)) { tmpMin = max; }
                 }
-                if (vValueType == 'd' || vValueType == 't') {
+                if (vValueType == 'd' || vValueType == 't' || vValueType == 'm') {
                     splitpoint = new Date((tmpMin.getTime() + tmpMax.getTime()) / 2);
                     if (vValueType == 'd') { splitpoint = new Date(Date.parse(splitpoint.format('yyyy/MM/dd'))); }
                 }
@@ -2451,7 +2485,7 @@ DChart.getCore = function () {
                 var curtainrightface = [[axisSize.maxX, axisSize.minY], [axisSize.maxX + axisSize.curtainwidth * axisSize.sinsightangle, axisSize.minY - axisSize.curtainwidth * axisSize.cossightangle], [axisSize.maxX + axisSize.curtainwidth * axisSize.sinsightangle, axisSize.maxY - axisSize.curtainwidth * axisSize.cossightangle], [axisSize.maxX, axisSize.maxY]];
                 inner.DrawFigures.createCloseFigure(curtainrightface, marblerightcolor);
             };
-            var drawValueAxisLabels = function (words, x, y, first) {
+            var drawValueAxisLabels = function () {
                 var labels = axisData.vLabels;
                 var contentX = axisSize.minX - vLabelStartX;
                 var contentY = axisSize.maxY + (options.cross.show ? axisSize.crossLength : 3) + axisSize.valueAxisLineWidth + 3 + vfontsize;
@@ -2723,6 +2757,9 @@ DChart.getCore = function () {
         inner.ClearCustomDraws = function () {
             inner.customDraws.length = 0;
         };
+        inner.clearCanvas = function () {
+            inner.ctx.clearRect(0, 0, inner.canvas.width, inner.canvas.height);
+        };
         inner.DrawFigures.createPointElement = function (type, X, Y, length, fillcolor, fill, strokecolor, linewidth, stroke, middle) {
             if (arguments.length < 5) { return; }
             if (fill == null) { fill = true; }
@@ -2975,7 +3012,6 @@ DChart.getCore = function () {
         inner.DrawFigures.createSmoothLine = function (points, linewidth, linecolor, invertAxis) {
             var ctx = inner.ctx;
             var len = points.length;
-            if (len < 3) { return; }
             ctx.save();
             ctx.lineWidth = linewidth || DChart.Const.Defaults.LineWidth;
             ctx.strokeStyle = linecolor || inner.innerOptions.lineColor || DChart.Const.Defaults.LineColor;

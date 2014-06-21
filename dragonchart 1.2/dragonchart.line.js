@@ -27,6 +27,7 @@ DChart.Line._getDefaultOptions = function (originalCommonOptions) {
             content: function (val) {
                 if (this.valueType == 'd') { return val.format('yyyy-MM-dd'); }
                 else if (this.valueType == 't') { return val.format('MM-dd hh:mm'); }
+                else if (this.valueType == 'm') { return val.format('hh:mm:ss.S'); }
                 else { return val.toString(); }
             },
             minvalue: null,
@@ -59,6 +60,7 @@ DChart.Line._getDefaultOptions = function (originalCommonOptions) {
                     var val = this.valueType == 'p' ? data.vpercent.toFixed(2) + '%' : data.vvalue.toString();
                     if (this.valueType == 'd') { val = data.vvalue.format('yyyy-MM-dd'); }
                     else if (this.valueType == 't') { val = data.vvalue.format('MM-dd hh:mm'); }
+                    else if (this.valueType == 'm') { val = data.vvalue.format('hh:mm:ss.S'); }
                     return '<div>&nbsp;' + (data.text ? data.text + '：' : '') + val + '&nbsp;</div>';
                 }
             }
@@ -103,8 +105,8 @@ DChart.Line._drawgraphic = function (inner, graphicID, innerData, options) {
     var axisSize = inner._computeAxis(valids);
     var coordinate = inner._getDrawableCoordinate();
 
-    if (!inner.coordinates.line) { inner.coordinates.line = {}; }
-    inner.coordinates.line[graphicID] = { nodes: [] };
+    if (!inner.coordinates.nodes) { inner.coordinates.nodes = {}; }
+    inner.coordinates.nodes[graphicID] = { nodes: [] };
     inner.shapes[graphicID] = { nodes: [] };
 
     var lValueType = options.labelAxis.valueType;
@@ -199,8 +201,8 @@ DChart.Line._drawgraphic = function (inner, graphicID, innerData, options) {
                 if (typeof mouseleave == 'function') { data.mouseleave = mouseleave; }
                 var shape = new nodeShape(index, x, y, _nodelength, data);
                 inner.shapes[graphicID].nodes.push(shape);
-                if (i >= 0) { inner.coordinates.line[graphicID].nodes[i][index] = { centerX: x, centerY: y, length: _nodelength }; }
-                else { inner.coordinates.line[graphicID].nodes[index] = { centerX: x, centerY: y, length: _nodelength }; }
+                if (i >= 0) { inner.coordinates.nodes[graphicID].nodes[i][index] = { centerX: x, centerY: y, length: _nodelength }; }
+                else { inner.coordinates.nodes[graphicID].nodes[index] = { centerX: x, centerY: y, length: _nodelength }; }
             }
         };
         var lvalue, vvalue, vpercent, center1, center2;
@@ -211,7 +213,7 @@ DChart.Line._drawgraphic = function (inner, graphicID, innerData, options) {
                 var linewidth = item.linewidth || options.line.linewidth || DChart.Const.Defaults.LineWidth;
                 var linecolor = item.color || linecolors[i % linecolors.length];
                 var text = item.text || '';
-                if (percentAnimComplete >= 1) { inner.coordinates.line[graphicID].nodes[i] = []; }
+                if (percentAnimComplete >= 1) { inner.coordinates.nodes[graphicID].nodes[i] = []; }
                 var count = item.value.length;
                 for (var k = 0; k < count; k++) {
                     subitem = item.value[k];

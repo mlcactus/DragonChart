@@ -30,6 +30,7 @@ DChart.RangeHistogram._getDefaultOptions = function (originalCommonOptions) {
                 var val = null;
                 if (this.valueType == 'd') { val = '<br/>Small Value: ' + data.value[0].format('yyyy-MM-dd') + '<br/>Big Value: ' + data.value[1].format('yyyy-MM-dd'); }
                 else if (this.valueType == 't') { val = '<br/>Small Value: ' + data.value[0].format('MM-dd hh:mm') + '<br/>Big Value: ' + data.value[1].format('MM-dd hh:mm'); }
+                else if (this.valueType == 'm') { val = '<br/>Small Value: ' + data.value[0].format('hh:mm:ss.S') + '<br/>Big Value: ' + data.value[1].format('hh:mm:ss.S'); }
                 else { val = '<br/>Small Value: ' + data.value[0] + '<br/>Big Value: ' + data.value[1]; }
                 return '<div>' + data.text + '：' + val + '&nbsp;</div>';
             }
@@ -37,12 +38,9 @@ DChart.RangeHistogram._getDefaultOptions = function (originalCommonOptions) {
         smallLabel: {
             show: true,
             content: function (val) {
-                if (this.valueType == 'd') {
-                    return val.format('yyyy-MM-dd');
-                }
-                else if (this.valueType == 't') {
-                    return val.format('MM-dd hh:mm');
-                }
+                if (this.valueType == 'd') { return val.format('yyyy-MM-dd'); }
+                else if (this.valueType == 't') { return val.format('MM-dd hh:mm'); }
+                else if (this.valueType == 'm') { return val.format('hh:mm:ss.S'); }
                 else { return val.toString(); }
             },
             color: null,
@@ -53,12 +51,9 @@ DChart.RangeHistogram._getDefaultOptions = function (originalCommonOptions) {
         bigLabel: {
             show: true,
             content: function (val) {
-                if (this.valueType == 'd') {
-                    return val.format('yyyy-MM-dd');
-                }
-                else if (this.valueType == 't') {
-                    return val.format('MM-dd hh:mm');
-                }
+                if (this.valueType == 'd') { return val.format('yyyy-MM-dd'); }
+                else if (this.valueType == 't') { return val.format('MM-dd hh:mm'); }
+                else if (this.valueType == 'm') { return val.format('hh:mm:ss.S'); }
                 else { return val.toString(); }
             },
             color: null,

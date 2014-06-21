@@ -28,6 +28,7 @@ DChart.Area._getDefaultOptions = function (originalCommonOptions) {
             content: function (val) {
                 if (this.valueType == 'd') { return val.format('yyyy-MM-dd'); }
                 else if (this.valueType == 't') { return val.format('MM-dd hh:mm'); }
+                else if (this.valueType == 'm') { return val.format('hh:mm:ss.S'); }
                 else { return val.toString(); }
             },
             minvalue: null,
@@ -63,6 +64,7 @@ DChart.Area._getDefaultOptions = function (originalCommonOptions) {
                     var val = this.valueType == 'p' ? data.vpercent.toFixed(2) + '%' : data.vvalue.toString();
                     if (this.valueType == 'd') { val = data.vvalue.format('yyyy-MM-dd'); }
                     else if (this.valueType == 't') { val = data.vvalue.format('MM-dd hh:mm'); }
+                    else if (this.valueType == 'm') { val = data.vvalue.format('hh:mm:ss.S'); }
                     return '<div>&nbsp;' + (data.text ? data.text + '：' : '') + val + '&nbsp;</div>';
                 }
             }

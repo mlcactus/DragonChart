@@ -28,7 +28,8 @@ DChart.QueueBar._getDefaultOptions = function (originalCommonOptions) {
             show: true,
             content: function (data) {
                 if (this.valueType == 'd') { return data.value.format('MM-dd'); }
-                else if (this.valueType == 't') { return data.value.format('HH:mm'); }
+                else if (this.valueType == 't') { return data.value.format('hh:mm'); }
+                else if (this.valueType == 'm') { return data.value.format('mm:ss.S'); }
                 else { return data.value.toString(); }
             },
             color: null,
@@ -61,10 +62,6 @@ DChart.QueueBar._drawgraphic = function (inner, graphicID, innerData, options) {
     var axisSize = inner._computeAxis(valids);
     var colors = (options.bar.colors && options.bar.colors.length > 0 ? options.bar.colors : null) || DChart.Const.Defaults.FillColors;
     var coordinate = inner._getDrawableCoordinate();
-    if (graphicID == inner.ID) {
-        inner.coordinates.draw = coordinate;
-        inner._configs.legendColors = colors;
-    }
     if (!inner.coordinates.bars) { inner.coordinates.bars = {}; }
     inner.coordinates.bars[graphicID] = [];
     inner.shapes[graphicID] = { bars: [] };
@@ -104,6 +101,25 @@ DChart.QueueBar._drawgraphic = function (inner, graphicID, innerData, options) {
         }
         return resShadow;
     };
+    var getBarTop = function (i, k) {
+        if (k != undefined) {
+            var cut = demanCount / 2 - (contrastmode ? parseInt(i / 2) : i);
+            return axisSize.startPos - axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
+        }
+        else {
+            return axisSize.startPos - axisSize.labelDistance * i - length / 2
+        }
+    };
+    if (graphicID == inner.ID) {
+        inner.coordinates.draw = coordinate;
+        inner._configs.legendColors = colors;
+        if (axisData.multiple) {
+            inner._configs.pointsPosition = { invertAxis: true, labelDistance: axisSize.labelDistance, startPoints: [] };
+            for (var i = 0, item; item = innerData[i]; i++) {
+                inner._configs.pointsPosition[i] = getBarTop(i, 0) + length / 2;
+            }
+        }
+    }
     var drawPart = function (isSmall, left, top, width, height, color, data, _shadow) {
         inner.DrawFigures.createRectangleFill(left, top, width, height, color, _shadow || getShadow(isSmall));
         if (data && options.label.show) {
@@ -170,11 +186,10 @@ DChart.QueueBar._drawgraphic = function (inner, graphicID, innerData, options) {
             var height = (options.animateY ? animationDecimal : 1) * length;
             if (axisData.multiple) {
                 var color = item.color || colors[i % colors.length];
-                var cut = demanCount / 2 - (contrastmode ? parseInt(i / 2) : i);
                 for (var k = 0; k < item.value.length; k++) {
                     var val = item.value[k];
                     var isSmall = val < splitpoint;
-                    var top = axisSize.startPos - axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
+                    var top = getBarTop(i, k);
                     var width = getWidth(val);
                     var left = isSmall ? axisSize.splitLinePos - width : axisSize.splitLinePos;
                     if (percentAnimComplete >= 1) {
@@ -195,7 +210,7 @@ DChart.QueueBar._drawgraphic = function (inner, graphicID, innerData, options) {
                 var isSmall = val < splitpoint;
                 var width = getWidth(val);
                 var left = isSmall ? axisSize.splitLinePos - width : axisSize.splitLinePos;
-                var top = axisSize.startPos - axisSize.labelDistance * i - length / 2;
+                var top = getBarTop(i);
                 var color = item.color || (options.bar.useSameColor ? 'rgba(69,114,167,1)' : colors[i % colors.length]);
                 if (percentAnimComplete >= 1) {
                     var data = { text: item.text, value: val, indexX: i, indexY: null, fontsize: item.fontsize, fontcolor: item.fontcolor, fontweight: item.fontweight, click: item.click, mouseover: item.mouseover, mouseleave: item.mouseleave };

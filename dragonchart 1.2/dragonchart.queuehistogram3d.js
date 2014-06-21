@@ -28,7 +28,8 @@ DChart.QueueHistogram3D._getDefaultOptions = function (originalCommonOptions) {
             show: true,
             content: function (data) {
                 if (this.valueType == 'd') { return data.value.format('MM-dd'); }
-                else if (this.valueType == 't') { return data.value.format('HH:mm'); }
+                else if (this.valueType == 't') { return data.value.format('hh:mm'); }
+                else if (this.valueType == 'm') { return data.value.format('mm:ss.S'); }
                 else { return data.value.toString(); }
             },
             color: null,

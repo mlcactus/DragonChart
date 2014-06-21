@@ -28,7 +28,8 @@ DChart.QueueHistogram._getDefaultOptions = function (originalCommonOptions) {
             show: true,
             content: function (data) {
                 if (this.valueType == 'd') { return data.value.format('MM-dd'); }
-                else if (this.valueType == 't') { return data.value.format('HH:mm'); }
+                else if (this.valueType == 't') { return data.value.format('hh:mm'); }
+                else if (this.valueType == 'm') { return data.value.format('mm:ss.S'); }
                 else { return data.value.toString(); }
             },
             color: null,
@@ -61,10 +62,6 @@ DChart.QueueHistogram._drawgraphic = function (inner, graphicID, innerData, opti
     var axisSize = inner._computeAxis(valids);
     var colors = (options.histogram.colors && options.histogram.colors.length > 0 ? options.histogram.colors : null) || DChart.Const.Defaults.FillColors;
     var coordinate = inner._getDrawableCoordinate();
-    if (graphicID == inner.ID) {
-        inner.coordinates.draw = coordinate;
-        inner._configs.legendColors = colors;
-    }
     if (!inner.coordinates.histograms) { inner.coordinates.histograms = {}; }
     inner.coordinates.histograms[graphicID] = [];
     inner.shapes[graphicID] = { histograms: [] };
@@ -103,6 +100,26 @@ DChart.QueueHistogram._drawgraphic = function (inner, graphicID, innerData, opti
         }
         return resShadow;
     };
+    var getHistogramLeft = function (i, k) {
+        if (k != undefined) {
+            var cut = demanCount / 2 - (contrastmode ? parseInt(i / 2) : i);
+            return axisSize.startPos + axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
+        }
+        else {
+            return axisSize.startPos + axisSize.labelDistance * i - length / 2;
+        }
+    };
+    if (graphicID == inner.ID) {
+        inner.coordinates.draw = coordinate;
+        inner._configs.legendColors = colors;
+        if (axisData.multiple) {
+            inner._configs.pointsPosition = { labelDistance: axisSize.labelDistance, startPoints: [] };
+            for (var i = 0, item; item = innerData[i]; i++) {
+                inner._configs.pointsPosition[i] = getHistogramLeft(i, 0) + length / 2;
+            }
+        }
+    }
+
     var drawPart = function (isSmall, left, top, width, height, color, data, _shadow) {
         inner.DrawFigures.createRectangleFill(left, top, width, height, color, _shadow || getShadow(isSmall));
         if (data && options.label.show) {
@@ -171,11 +188,10 @@ DChart.QueueHistogram._drawgraphic = function (inner, graphicID, innerData, opti
             var width = (options.animateX ? animationDecimal : 1) * length;
             if (axisData.multiple) {
                 var color = item.color || colors[i % colors.length];
-                var cut = demanCount / 2 - (contrastmode ? parseInt(i / 2) : i);
                 for (var k = 0; k < item.value.length; k++) {
                     var val = item.value[k];
                     var isSmall = val < splitpoint;
-                    var left = axisSize.startPos + axisSize.labelDistance * k - cut * length - (cut - 0.5) * gap;
+                    var left = getHistogramLeft(i, k);
                     var height = getHeight(val);
                     var top = isSmall ? axisSize.splitLinePos : axisSize.splitLinePos - height;
                     if (percentAnimComplete >= 1) {
@@ -194,7 +210,7 @@ DChart.QueueHistogram._drawgraphic = function (inner, graphicID, innerData, opti
             else {
                 var val = item.value;
                 var isSmall = val < splitpoint;
-                var left = axisSize.startPos + axisSize.labelDistance * i - length / 2;
+                var left = getHistogramLeft(i);
                 var height = getHeight(val);
                 var top = isSmall ? axisSize.splitLinePos : axisSize.splitLinePos - height;
                 var color = item.color || (options.histogram.useSameColor ? 'rgba(69,114,167,1)' : colors[i % colors.length]);

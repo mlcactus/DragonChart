@@ -30,6 +30,7 @@ DChart.RangeArea._getDefaultOptions = function (originalCommonOptions) {
             content: function (val) {
                 if (this.valueType == 'd') { return val.format('yyyy-MM-dd'); }
                 else if (this.valueType == 't') { return val.format('MM-dd hh:mm'); }
+                else if (this.valueType == 'm') { return val.format('hh:mm:ss.S'); }
                 else { return val.toString(); }
             },
             minvalue: null,
@@ -54,6 +55,7 @@ DChart.RangeArea._getDefaultOptions = function (originalCommonOptions) {
                     var valstr = val.toString();
                     if (valueType == 'd') { valstr = val.format('yyyy-MM-dd'); }
                     else if (valueType == 't') { valstr = val.format('MM-dd hh:mm'); }
+                    else if (valueType == 'm') { valstr = val.format('hh:mm:ss.S'); }
                     return valstr;
                 };
                 if (merge) {

@@ -25,7 +25,7 @@ DChart.Histogram3D._getDefaultOptions = function (originalCommonOptions) {
         topLabel: {
             show: true,
             content: function (data) {
-                if (this.valueType == 'd' || this.valueType == 't') { return ''; }
+                if (this.valueType == 'd' || this.valueType == 't' || this.valueType == 'm') { return ''; }
                 else if (this.valueType == 'p') { return data.percent.toFixed(1).toString() + '%'; }
                 else { return data.value.toString(); }
             },
