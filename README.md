@@ -10,7 +10,7 @@ Notice!! I have change the name DragonChart to LoongChart. So, this repository w
 
 Just see my site for more infomation.
 [dcharts.net][dcharts]
-[dcharts]: http://www.dcharts.net
+[dcharts]: http://www.dcharts.net/Home_EN.htm
 
 
 ## Usage Examples
