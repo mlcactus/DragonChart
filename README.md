@@ -1,8 +1,12 @@
-Dragon Chart
+﻿Dragon Chart
 ===========
 DChart is designed as Infographics mapping components. With it you draw general information charts in your web page or application, 
 such as Pie, Bar, Line, Etc. Becasue it is coded by pure javascript, so as long as your device support javascript and html5, 
 you will not encounter support problems during use theoretically.
+
+Notice!! I have change the name DragonChart to LoongChart. So, this repository will never be updated. Please check LoongChart repository instead. You can get detailed information about this changing at
+[dcharts.net][dcharts1]
+[dcharts1]: http://www.dcharts.net/ChangeName_EN.htm
 
 Just see my site for more infomation.
 [dcharts.net][dcharts]
